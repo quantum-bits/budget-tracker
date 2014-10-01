@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% block extrahead %}
+{% endblock %}
+{% block content %}
+<div class="content-center">
+
+{% if can_edit %}
+<p> <a href="{% url 'choose_year_course_copy' %}?next={{ request.path|urlencode }}">
+	    Copy</a> course(s) from previous year.
+</p>
+{% endif %}
+</div>
+ <div id="year-accordion" class="accordion">
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion"
+	   href="#1001">
+	 Combined
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1001" class="accordion-body collapse">
+	<div class="accordion-inner">
+<table class="table table-striped table-bordered table-hover">
+	     <thead>
+	       <tr>
+		<th colspan="6">Teaching Loads</th>
+		</tr>
+	       <td> Number </td>
+	       <td> Name </td>
+	       <td style="text-align: center;"> Semester </td>
+	       <td style="text-align: center;"> Time </td>
+	       <td style="text-align: center;"> Room </td>
+	        <td style="text-align: center;"> Load </td>
+	       <td style="text-align: center;"> Diff </td>
+		{% for prof in instructor_list %}
+		   <td colspan="3" style="text-align: center;"> {{prof}} </td>
+		{% endfor %}
+	       <td style="text-align: center;"> Comments </td>
+	       </tr>
+	     </thead>
+	     <tbody>
+{% for course in course_data_list %}
+    <tr>
+      <td> {{course.number}}</td>
+      <td> {{course.name}}</td>
+      <td style="text-align: center;"> {{course.semester}} </td>
+      <td style="text-align: center;">      
+	{% for meeting in course.meeting_times %}
+	<div>
+	  {% if course.meetings_scheduled %}
+	  {% if can_edit %}
+	  <a href="{% url 'update_class_schedule' course.id %}?next={{ request.path|urlencode }}">
+	    {{meeting}}</a>
+	  {% else %} 
+	    {{meeting}}
+	  {% endif %}
+	  {% else %}
+	  {% if can_edit %}
+	  <a href="{% url 'new_class_schedule' course.id %}">
+	    {{meeting}}</a>
+	  {% else %}
+	    {{meeting}}
+	  {% endif %}
+	  {% endif %}
+	</div>
+	{% endfor %}
+      </td> 
+      <td style="text-align: center;">
+	{% for room in course.rooms %}
+	<div>
+	  {% if course.meetings_scheduled %}
+	  {% if can_edit %}
+	  <a href="{% url 'update_class_schedule' course.id %}?next={{ request.path|urlencode }}">
+	    {{room}}</a>
+	  {% else %}
+	  {{room}}
+	  {% endif %}
+	  {% else %}
+	  {% if can_edit %}
+	  <a href="{% url 'new_class_schedule' course.id %}">
+	    {{room}}</a>
+	  {% else %}
+	  {{room}}
+	  {% endif %}
+	  {% endif %}
+	</div>
+	{% endfor %}
+      </td>
+      <td style="text-align: center;">
+	{% if can_edit %}
+	<a href="{% url 'update_course_offering' course.id %}?next={{ request.path|urlencode }}"> {{course.load_hours}}</a>
+        {% else %} {{course.load_hours}} {% endif %} </td>
+	{% if course.load_difference < 0 %}
+          <td style="text-align: center; color: red"> 
+	  {{course.load_difference}}
+	  </td>
+	{% elif course.load_difference > 0 %}
+	  <td style="text-align: center;"> 
+	  {{course.load_difference}} 
+	  </td>
+	{% else %}
+	  <td></td>
+	{% endif %}
+      {% for load in course.load_hour_list %}
+	  {% if load.1 == 0 %}
+	    <td colspan="3" style="text-align: left;">
+	      {% if load.0 >= 0 %}
+	        {{load.0}} 
+	      {% endif %}
+	    </td>
+          {% elif load.1 == 1 %}
+	    <td colspan="3" style="text-align: center;">
+	      {% if load.0 >= 0 %}
+	        {{load.0}} 
+	      {% endif %}
+	    </td>
+	  {% elif load.1 == 2 %}
+	    <td colspan="3" style="text-align: right;">
+	      {% if load.0 >= 0 %}
+	        {{load.0}} 
+	      {% endif %}
+	    </td>
+	  {% else %}
+	    <td colspan="3" style="text-align: right;"></td>
+	  {% endif %}
+      {% endfor %}
+      <td style="text-align: center;"> {{course.comment}}</td>
+</tr>
+{% endfor %}
+
+{% for data_element in admin_data_list %}
+<tr>
+  <td> </td>
+  <td style="text-align: left;"> 
+    {% if can_edit %}
+    <a href="{% url 'update_other_load' data_element.id %}?next={{ request.path|urlencode }}"> {{data_element.load_type}}</a>
+    {% else %} {{data_element.load_type}} {% endif %} </td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  {% for load in data_element.load_hour_list %}
+   {% for loadelement in load %}
+    <td style="text-align: center;">
+     {% if loadelement > 0 %}
+      {{loadelement}} 
+     {% endif %}
+    </td>
+   {% endfor %}
+  {% endfor %}
+  <td> </td>
+</tr>
+{% endfor %}
+
+<tr>
+	       <td> </td>
+	       <td style="text-align: right;"> Load Summary </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       {% for load in faculty_load_summary %}
+	          {% for loadelement in load %}
+                     <td style="text-align: center;">
+	               {{loadelement}} 
+		     </td>
+		  {% endfor %}
+	       {% endfor %}
+	       <td> </td>
+
+</tr>
+
+<tr>
+	       <td> </td>
+	       <td style="text-align: right;"> Total </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       {% for load in total_load_hours %}
+                     <td colspan="3" style="text-align: center;">
+	               {{load}} 
+		     </td>
+	       {% endfor %}
+	       <td> </td>
+
+</tr>
+
+<tr>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+		{% for prof in instructor_list %}
+		   <td colspan="3" style="text-align: center;"> {{prof}} </td>
+		{% endfor %}
+	       <td> </td>
+
+</tr>
+
+</table>
+
+<p> Note: Any Summer loads are included with Fall. </p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+ <div id="year-accordion2" class="accordion">
+{% for instructor_row in data_list_by_instructor %}
+
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#{{instructor_row.instructor_id}}">
+	 {{instructor_row.instructor}}
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="{{instructor_row.instructor_id}}" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<table class="table table-striped table-bordered table-hover">
+	     <thead>
+	       <tr>
+		<th colspan="6">Teaching Load</th>
+		</tr>
+	       <td> Number </td>
+	       <td> Name </td>
+	       <td style="text-align: center;"> Semester </td>
+	       <td style="text-align: center;"> Time </td>
+	       <td style="text-align: center;"> Room </td>
+	        <td style="text-align: center;"> Load </td>
+	       <td style="text-align: center;"> Diff </td>
+	       <td colspan="3" style="text-align: center;"> {{instructor_row.instructor}} </td>
+	       <td style="text-align: center;"> Comments </td>
+	       </tr>
+	     </thead>
+	     <tbody>
+{% for course in instructor_row.course_info %}
+    <tr>
+      <td> {{course.number}}</td>
+      <td> {{course.name}}</td>
+      <td style="text-align: center;"> {{course.semester}} </td>
+      <td style="text-align: center;">      
+	{% for meeting in course.meeting_times %}
+	<div>
+	  {% if course.meetings_scheduled %}
+	  {% if can_edit %}
+	  <a href="{% url 'update_class_schedule' course.id %}?next={{ request.path|urlencode }}">
+	    {{meeting}}</a>
+	  {% else %} {{meeting}} {% endif %}
+	  {% else %}
+	  {% if can_edit %}
+	  <a href="{% url 'new_class_schedule' course.id %}">
+	    {{meeting}}</a>
+	  {% else %} {{meeting}} {% endif %}
+	  {% endif %}
+	</div>
+	{% endfor %}
+      </td> 
+      <td style="text-align: center;">
+	{% for room in course.rooms %}
+	<div>
+	  {% if course.meetings_scheduled %}
+	  {% if can_edit %}
+	  <a href="{% url 'update_class_schedule' course.id %}?next={{ request.path|urlencode }}">
+	    {{room}}</a>
+	  {% else %} {{room}} {% endif %}
+	  {% else %}
+	  {% if can_edit %}
+	  <a href="{% url 'new_class_schedule' course.id %}">
+	    {{room}}</a>
+	  {% else %} {{room}} {% endif %}
+	  {% endif %}
+	</div>
+	{% endfor %}
+      </td>
+      <td style="text-align: center;">
+	{% if can_edit %}
+	<a href="{% url 'update_course_offering' course.id %}?next={{ request.path|urlencode }}"> {{course.load_hours}}</a>
+        {% else %} {{course.load_hours}} {% endif %}</td>
+	{% if course.load_difference < 0 %}
+          <td style="text-align: center; color: red"> 
+	  {{course.load_difference}}
+	  </td>
+	{% elif course.load_difference > 0 %}
+	  <td style="text-align: center;"> 
+	  {{course.load_difference}} 
+	  </td>
+	{% else %}
+	  <td></td>
+	{% endif %}
+	{% if course.load_hour_list.1 == 0 %}
+	<td colspan="3" style="text-align: left;">
+	  {% if course.load_hour_list.0 >= 0 %}
+	        {{course.load_hour_list.0}} 
+	  {% endif %}
+	</td>
+        {% elif course.load_hour_list.1 == 1 %}
+	<td colspan="3" style="text-align: center;">
+	  {% if course.load_hour_list.0 >= 0 %}
+	  {{course.load_hour_list.0}} 
+	  {% endif %}
+	</td>
+	{% elif course.load_hour_list.1 == 2 %}
+	<td colspan="3" style="text-align: right;">
+	  {% if course.load_hour_list.0 >= 0 %}
+	  {{course.load_hour_list.0}} 
+	  {% endif %}
+	</td>
+	{% else %}
+	<td colspan="3" style="text-align: right;"></td>
+	{% endif %}
+      <td style="text-align: center;"> {{course.comment}}</td>
+</tr>
+{% endfor %}
+
+{% for data_element in instructor_row.admin_data_list %}
+<tr>
+  <td> </td>
+  <td style="text-align: left;"> 
+    {% if can_edit %}
+    <a href="{% url 'update_other_load' data_element.id %}?next={{ request.path|urlencode }}"> {{data_element.load_type}}</a>
+    {% else %} {{data_element.load_type}} {% endif %} </td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  {% for loadelement in data_element.load_hour_list %}
+  <td style="text-align: center;">
+    {% if loadelement > 0 %}
+    {{loadelement}} 
+    {% endif %}
+  </td>
+  {% endfor %}
+  <td> </td>
+</tr>
+{% endfor %}
+
+<tr>
+	       <td> </td>
+	       <td style="text-align: right;"> Load Summary </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       {% for loadelement in instructor_row.load_summary %}
+               <td style="text-align: center;">
+	         {{loadelement}} 
+	       </td>
+	       {% endfor %}
+	       <td> </td>
+
+</tr>
+
+<tr>
+	       <td> </td>
+	       <td style="text-align: right;"> Total </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+	       <td> </td>
+               <td colspan="3" style="text-align: center;">
+	         {{instructor_row.total_load_hours}} 
+	       </td>
+	       <td> </td>
+
+</tr>
+
+</table>
+
+<p> Note: Any Summer loads are included with Fall. </p>
+
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+
+
+
+
+  <script>
+    $(window).load(function(){
+    $("#nav-deptloadsummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Faculty Load Summary ({{department}}, {{academic_year}})</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+
+{% endblock %}
+</div>

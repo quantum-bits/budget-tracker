@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p> {{form.errors}} </p>
+
+   <div class="content-center">
+     {% if errordict.prof_repeated_error %}
+        <p class="error"> {{errordict.prof_repeated_error}} </p>
+     {% endif %}
+     {% if errordict.load_credit %}
+        <p class="error"> {{errordict.load_credit}} </p>
+     {% endif %}
+     {% if errordict.instructor %}
+        <p class="error"> {{errordict.instructor}} </p>
+     {% endif %}
+     {% if errordict.over_all_form_errors %}
+        <p class="error"> {{errordict.over_all_form_errors}} </p>
+     {% endif %}
+    <form action="" method="post">
+      {% csrf_token %}
+      <div class="cyoc_div">
+	{{ formset.management_form }}
+	<table class="table table-striped table-bordered table-hover table-condensed">
+	<tr>
+	<td> Instructor </td>
+	<td> Load Hours </td>
+	<td> Delete </td>
+	</tr>
+	{% for subform in formset %}
+	<tr>
+        <td>{{subform.id}} {{ subform.instructor }}</td>
+	<td>{{subform.id}} {{ subform.load_credit }}</td>
+	<td>{{subform.id}} {{ subform.DELETE }} </td>
+	</tr>
+	{% endfor %}
+	</table>
+      </div>
+
+      <div class="cyoc_div">
+        {% if form.load_available.errors %}
+
+        <p class="error">{{ form.load_available.errors }}</p>{% endif %}
+
+        <p><label form="load_available" if="" form.load_available.errors="" class="error" endif="">Load
+        Available:</label></p>
+
+        <p>{{ form.load_available }}</p>
+      </div>
+
+      <div class="cyoc_div">
+        {% if form.max_enrollment.errors %}
+
+        <p class="error">{{ form.max_enrollment.errors }}</p>{% endif %}
+
+        <p><label form="max_enrollment" if="" form.max_enrollment.errors="" class="error"
+        endif="">Maximum Enrollment:</label></p>
+
+        <p>{{ form.max_enrollment }}</p>
+      </div>
+
+      <div class="cyoc_div">
+
+        <p><label form="max_enrollment" if="" form.max_enrollment.errors="" class="error"
+        endif="">Comments:</label></p>
+
+        <p>{{ form.comment }}</p>
+      </div>
+
+      <p><input type="submit" alt="register" /></p>
+    </form>
+  </div>
+
+   <script>
+    $(window).load(function(){
+    $("#nav-deptloadsummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>{{course}}</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

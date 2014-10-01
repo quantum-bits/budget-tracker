@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<form action="" method="post">
+  {% csrf_token %}
+
+<p> <h2>Enter Data</h2></p>
+
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css">
+  <script>
+  $(function() {
+    $( "#datepicker" ).datepicker();
+  });
+  </script>
+
+{% for error in formset.non_form_errors %} <p style="color:red"> Error:{{formset.non_form_errors}}</p> {% endfor %}
+
+{% if date_error %}  <p style="color:red"> Error: {{date_error}} </p> {% endif %}
+<p>Date: <input type="text" id="datepicker" name="inputdate" value = {{date}}></p>
+
+    {{expense_form.management_form}}
+    <table class="table table-striped table-bordered table-hover table-condensed" style="width:40%">
+	{{expense_form.id}}
+	<tr>
+	  <td> Checked</td> <td style="text-align: center;"> {{expense_form.checked}}</td>
+	  <td rowspan="3"> 
+	    <div>Extra Note</div>
+	    <div>{{expense_form.extra_note}}</div>
+	  </td>
+	</tr>
+	<tr>
+	  <td> Encumbrance</td> <td style="text-align: center;"> {{expense_form.encumbered}}</td>
+	</tr>
+	<tr>
+	  <td> Future Expense</td> <td style="text-align: center;"> {{expense_form.future_expense}}</td>
+	</tr>
+    </table>
+  <div class="cyoc_div">
+    <table class="table table-striped table-bordered table-hover table-condensed">
+      <tbody>
+	<tr>
+	  <td> Description  {% if expense_form.errors.description %} <p style="color:red"> Error: {{expense_form.errors.description}} {% endif %}
+</td> 
+	  <td> Charged By </td>
+	  <td> Credit Card </td>
+	  </tr>
+	<tr>
+	  <td style="text-align: center;"> {{expense_form.description}}</td>
+	  <td style="text-align: center;"> {{expense_form.charged_by}}</td>
+	  <td style="text-align: center;"> {{expense_form.credit_card}}</td>
+	</tr>
+	<tr>
+      </tbody>
+    </table>
+   </div>
+
+<!--
+     {% if errordict.room %}
+        <p class="error"> A room needs to be specified for each class period. </p>
+     {% endif %}
+     {% if errordict.begin_at %}
+        <p class="error"> A beginning time needs to be specified (e.g., 9:00). </p>
+     {% endif %}
+     {% if errordict.end_at %}
+        <p class="error"> An ending time needs to be specified (e.g., 9:50). </p>
+     {% endif %}
+-->
+
+      <div class="cyoc_div">
+	{{ formset.management_form }}
+	<table class="table table-striped table-bordered table-hover table-condensed">
+	<tr>
+	<td> Amount </td>
+	<td> Debit/Credit </td>
+	<td> Budget Line </td>
+	<td> Subaccount </td>
+	<td> Delete </td>
+	</tr>
+	{% for subform in formset %}
+	<tr>
+        <td>{{subform.id}} {{ subform.amount }} {% if subform.errors.amount %} <p style="color:red"> Error: {{subform.errors.amount}} </p> {% endif %}</td>
+	<td>{{subform.id}} {{ subform.debit_or_credit}}</td>
+	<td>{{subform.id}} {{ subform.budget_line}} {% if subform.errors.budget_line %} <p style="color:red"> Error: {{subform.errors.budget_line}} </p> {% endif %}</td>
+	<td>{{subform.id}} {{ subform.subaccount }}</td>
+	<td>{{subform.id}} {% if subform.amount.value %} {{subform.DELETE}} {% endif %} </td>
+	</tr>
+	{% endfor %}
+	</table>
+      </div>
+
+      <p><input type="submit" alt="register" /></p>
+    </form>
+
+<!--
+   <script>
+    $(window).load(function(){
+       $('#id_expense_budget_line-0-subaccount').prop("disabled", true);
+       $('#id_expense_budget_line-0-subaccount').hide();
+    });
+   </script>
+-->
+
+   <script>
+    $(window).load(function(){
+    var budget_line_labels = {{json_budget_line_labels|safe}};
+    var subaccount_labels = {{json_subaccount_labels|safe}};
+    var bls_with_sas = {{json_bls_with_sas|safe}};
+    for (var n=0; n < subaccount_labels.length; n++) {
+      var value=$('#'+budget_line_labels[n]).val();
+      var bl_has_sa = false;
+      for (var m=0; m < bls_with_sas.length; m++) {
+         if (value == bls_with_sas[m]) {
+           bl_has_sa = true;
+         }
+      }
+      if (bl_has_sa == false) {
+	$('#'+subaccount_labels[n]).prop("disabled", true);
+	$('#'+subaccount_labels[n]).hide();
+      }
+      } 
+    });
+   </script>
+
+
+<script>
+  $(function() {
+  var budget_line_labels = {{json_budget_line_labels|safe}};
+  var subaccount_labels = {{json_subaccount_labels|safe}};
+  var bls_with_sas = {{json_bls_with_sas|safe}};
+  function handleElement(i) {
+    $('#'+budget_line_labels[i]).on('change', function(){
+       var selectId = $(this).attr('id');
+       var value=$(this).val();
+       var idSubAccount = subaccount_labels[i];
+       var bl_has_sa = false;
+       for (var m=0; m < bls_with_sas.length; m++) {
+         if (value == bls_with_sas[m]) {
+           bl_has_sa = true;
+         }
+       }
+       if (bl_has_sa == true) {
+          $('#'+idSubAccount).prop("disabled", false);
+          $('#'+idSubAccount).fadeIn(300);
+       } else {
+          $('#'+idSubAccount).prop("disabled", true);
+          $('#'+idSubAccount).val("");
+          $('#'+idSubAccount).fadeOut(300);
+       }
+      });
+  }
+
+ for (var n=0; n < budget_line_labels.length; n++) {
+   handleElement(n);
+ }
+ })
+</script>
+
+
+
+
+   <script>
+    $(window).load(function(){
+    $("#nav-deptloadsummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>New Budget Entry</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

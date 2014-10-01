@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block extrahead %}
+{% endblock %}
+{% block content %}
+ <div id="year-accordion" class="accordion">
+{% for course_data in data_list %}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion"
+	   href="#{{course_data.0.course_id}}">
+	 {{course_data.0.course_name}}
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="{{course_data.0.course_id}}" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+{% for data in course_data %}
+
+<canvas id="{{data.id}}" width="{{data.schedule.width}}" height="{{data.schedule.height}}"></canvas>
+
+  <script>
+    var canvas = document.getElementById("{{data.id}}");
+    var context = canvas.getContext('2d');
+
+    var line_list = {{data.json_grid_list|safe}};
+    var filled_row_list = {{data.json_filled_row_list|safe}};
+    var box_list = {{data.json_box_list|safe}};
+    var table_text_list = {{data.json_table_text_list|safe}};
+    var box_label_list = {{data.json_box_label_list|safe}};
+
+    for(var n = 0; n < filled_row_list.length; n++) {
+      context.beginPath();
+      context.rect(filled_row_list[n][0], filled_row_list[n][1], filled_row_list[n][2], filled_row_list[n][3]);
+      context.fillStyle = filled_row_list[n][4];
+      context.fill();
+      context.lineWidth = filled_row_list[n][5];
+      context.strokeStyle = filled_row_list[n][6];
+      context.stroke();
+      }
+
+    for(var n = 0; n < line_list.length; n++) {
+      context.beginPath();
+      context.moveTo(line_list[n][0], line_list[n][1]);
+      context.lineTo(line_list[n][2], line_list[n][3]);
+      context.lineWidth = {{data.schedule.grid_line_width}};
+      context.strokeStyle = "{{data.schedule.grid_line_colour}}";
+      context.lineCap = 'square';		
+      context.stroke();
+      }
+
+    for(var n = 0; n < box_list.length; n++) {
+      context.beginPath();
+      context.rect(box_list[n][0], box_list[n][1], box_list[n][2], box_list[n][3]);
+      context.fillStyle = box_list[n][4];
+      context.fill();
+      context.lineWidth = box_list[n][5];
+      context.strokeStyle = box_list[n][6];
+      context.stroke();
+      }
+
+    for(var n = 0; n < box_label_list.length; n++) {
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';		       
+      context.fillStyle = box_label_list[n][4];
+      context.font = box_label_list[n][3];
+      context.fillText(box_label_list[n][2],box_label_list[n][0],box_label_list[n][1]);
+      }
+
+    for(var n = 0; n < table_text_list.length; n++) {
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';		       
+      context.fillStyle = table_text_list[n][4];
+      context.font = table_text_list[n][3];
+      context.fillText(table_text_list[n][2],table_text_list[n][0],table_text_list[n][1]);
+      }
+
+  </script>
+
+{% endfor %}
+
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+
+
+  <script>
+    $(window).load(function(){
+    $("#nav-schedule").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Course Schedules ({{year}})</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+
+{% endblock %}
+

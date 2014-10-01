@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="content-center">
+  <h2>iChair Login</h2>
+  <form action="" method="post">
+    {% csrf_token %}
+    {% if form.errors %}<p>Please correct the following fields:</p>{% endif %}
+
+    <div class="register_div">
+      {% if form.username.errors %}
+	<p class = "error">{{ form.username.errors }}</p>
+      {% endif %}
+
+      <p>
+	<label form="username" {% if form.username.errors %} class ="error"{% endif %}>Username:</label></p>
+      <p>{{ form.username }}</p>
+    </div>
+
+    <div class="register_div">
+      {% if form.password.errors %}<p class = "error">{{ form.password.errors }}</p>{% endif %}
+      <p><label form="password" {% if form.password.errors %} class ="error"{% endif %}>Password:</label></p>
+      <p>{{ form.password }}</p>
+    </div>
+
+    <p><input type="submit" alt="register" /></p>
+  </form>
+</div>
+<script>
+$(window).load(function(){
+$("#nav-login").addClass("current");
+$('.page-name').find('h1').replaceWith('<h1>Login</h1>');
+$(".page-name").stop().animate({
+                opacity: 1,
+	        'margin-left': '5%'
+            }, 700);});
+</script>
+{% endblock %}

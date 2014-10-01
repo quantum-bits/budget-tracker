@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if can_edit %}
+  <table class="table table-striped table-bordered table-hover">
+    <tbody>
+      {% for item in datablock %}
+	<tr class="info">
+	  <td>{{ item.3 }}</td>
+	  <td>{{ item.0 }}</td>
+	  {% if not isProfessor %}
+	    <td>
+	      <a class="btn" href="{% url 'update_note' item.2 %}">Edit</a>
+	      <a class="btn btn-danger" href="{% url 'delete_note' item.2 %}">Delete</a>
+	    </td>
+	  {% endif %}
+	</tr>
+        <tr>
+	  <td colspan="3">
+	    {{ item.1 }}
+	  </td>
+	</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+    <p>
+      <a class="btn btn-primary" href="{% url 'add_new_note' %}">Add a Note</a>
+    </p>
+{% else %}
+    <p> Sorry: You cannot view Notes. <p>
+{% endif %}
+
+  <script>
+    $(window).load(function(){
+    $("#nav-notes").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Notes ({{year}})</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+{% endblock %}

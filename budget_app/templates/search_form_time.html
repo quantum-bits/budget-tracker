@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-center">
+    <form action="" method="post">
+      {% csrf_token %}
+
+<p> <h2>Time and Day(s)*</h2></p>
+<p>
+  <div class="alert alert-student-info">
+    <table class="table table-striped table-bordered table-hover">
+      <tbody>
+	<tr>
+	  <th> Start Time </th>
+	  <td>
+	  <div align="center">
+	  <select name="start_time" id="start_time">
+	    {% for time in start_time_list %}
+	      <option value={{time}}>{{time}}:00</option>
+	    {% endfor %}
+	  </select>
+	  </div>
+	  </td>
+	</tr>
+	<tr>
+	  <th> Time Interval </th>
+	  <td>
+	  <div align="center">
+	  <select name="time_interval" id="time_interval">
+	    <option value='50'>0:50</option>
+	    <option value='75'>1:15</option>
+	    <option value='110'>1:50</option>
+	    <option value='170'>2:50</option>
+	  </select>
+	  </div>
+	  </td>
+	</tr>
+	<tr>
+	  <th> Day(s) </th>
+	  <td>
+	  <div align="left">
+	    <div>
+	<input type="checkbox" name="days_for_search" id="day0" value='0' />
+	    Monday
+	    </div>
+	    <div>
+	<input type="checkbox" name="days_for_search" id="day1" value='1' />
+	    Tuesday
+	    </div>
+	    <div>
+	<input type="checkbox" name="days_for_search" id="day2" value='2' />
+	    Wednesday
+	    </div>
+	    <div>
+	<input type="checkbox" name="days_for_search" id="day3" value='3' />
+	    Thursday
+	    </div>
+	    <div>
+	<input type="checkbox" name="days_for_search" id="day4" value='4' />
+	    Friday
+	    </div>
+	  </div>
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+    <p><strong>*Search will return courses that overlap with the requested time block on the requested day(s).</strong></p>
+   </div>
+</p>
+
+<p> <h2>Semester</h2></p>
+<p>
+  <div class="alert alert-student-info">
+    <table class="table table-striped table-bordered table-hover">
+      <tbody>
+	<tr>
+	  <td>
+	  <div align="center">
+	  <select name="semester" id="semester">
+	    {% for semester in semester_list %}
+	      <option value={{semester.id}}>{{semester.name}}</option>
+	    {% endfor %}
+	  </select>
+	  </div>
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+   </div>
+</p>
+
+<p> <h2>Department(s) to Include in Search</h2></p>
+      <p>
+  <div class="alert alert-student-info">
+    <table class="table table-striped table-bordered table-hover">
+      <tbody>
+	    {% for dept in dept_list %}
+	    <tr>
+	    <th>
+	    <div align="center">
+	      {{dept.name}}
+	    </div>
+	    </th>
+	    <td>
+	<input type="checkbox" name="depts_for_search" id="deptid{{dept.id}}" value={{dept.id}} />
+	    </td>
+	    </tr>
+	    {% endfor %}
+      </tbody>
+    </table>
+ </div>
+</p>
+
+	<p><input type="submit" value="Search"></p>
+
+   <script>
+    $(window).load(function(){
+    $("#nav-file").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Search for Course(s) by Time</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

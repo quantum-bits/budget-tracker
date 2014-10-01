@@ -1,0 +1,10 @@
+syntax: glob
+
+*.pyc
+*.db
+*.orig
+*.*~
+foo*
+*.log
+.DS_Store
+static_root/*

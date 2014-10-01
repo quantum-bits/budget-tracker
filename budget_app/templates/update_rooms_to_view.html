@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+   <div class="content-center">
+     <form action=""  method="post">
+      {% csrf_token %}
+
+      {{ form.as_table }}
+      <p><input type="submit" alt="register" /></p>
+     </form>
+   </div>
+
+   <script>
+    $(window).load(function(){
+    $("#nav-coursesummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Rooms To View</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

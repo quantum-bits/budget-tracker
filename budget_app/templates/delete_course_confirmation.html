@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<p> Are you sure that you want to <b> delete </b> the following course and all of its offerings? 
+This action is not reversible.</p> 
+<p> <b> {{course}} </b> (<a href="{% url 'course_summary' %}">No! It's all been a terrible mistake!</a>)</p>
+<p> <a href="{% url 'delete_course' course.id %}">Delete</a> </p>
+
+
+   <script>
+    $(window).load(function(){
+    $("#nav-coursesummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Delete {{course}}</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

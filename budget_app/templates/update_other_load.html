@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p> {{form.errors}} </p>
+
+   <div class="content-center">
+     {% if errordict.load_credit %}
+        <p class="error"> You need to specify the number of load hours for every item. </p>
+     {% endif %}
+     {% if errordict.semester %}
+        <p class="error"> You need to choose a semester. </p>
+     {% endif %}
+     {% if errordict.instructor %}
+        <p class="error"> You need to specify a faculty member for every item. </p>
+     {% endif %}
+     {% if errordict.over_all_form_errors %}
+        <p class="error"> {{errordict.over_all_form_errors}} </p>
+     {% endif %}
+    <form action="" method="post">
+      {% csrf_token %}
+      <div class="cyoc_div">
+	{{ formset.management_form }}
+	<table class="table table-striped table-bordered table-hover table-condensed">
+	<tr>
+	<td> Semester </td>
+	<td> Instructor </td>
+	<td> Load Credit </td>
+	<td> Comments (can be left blank) </td>
+	<td> Delete </td>
+	</tr>
+	{% for subform in formset %}
+	<tr>
+        <td>{{subform.id}} {{ subform.semester }}</td>
+	<td>{{subform.id}} {{ subform.instructor }}</td>
+	<td>{{subform.id}} {{ subform.load_credit }}</td>
+	<td>{{subform.id}} {{ subform.comments }}</td>
+	<td>{{subform.id}} {{ subform.DELETE }} </td>
+	</tr>
+	{% endfor %}
+	</table>
+      </div>
+
+      <p><input type="submit" alt="register" /></p>
+    </form>
+  </div>
+
+   <script>
+    $(window).load(function(){
+    $("#nav-coursesummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>{{other_load_type}}</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

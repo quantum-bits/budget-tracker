@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+    <span class="label label-warning">Note </span> The copy feature is
+    disabled if a similar course offering already exists in the same
+    semester in {{academic_year_copy_to}}.
+</p>
+<div class="content-center">
+<form action=""  method="post">
+  {% csrf_token %}
+  <table class="table table-striped table-bordered table-hover">
+    <thead>
+      <tr>
+	<th colspan="8">Course List for {{academic_year_copy_from}}</th>
+      </tr>
+      <tr>
+	<td> Number </td>
+	<td> Name </td>
+	<td style="text-align: center;"> Semester </td>
+	<td style="text-align: center;"> Time </td>
+	<td style="text-align: center;"> Room </td>
+	<td style="text-align: center;"> Faculty </td>
+	<td style="text-align: center;"> Notes </td>
+	<td style="text-align: center;"> <div> Copy </div> 
+	  <div>
+	    <a href="{% url 'copy_courses' year_id check_all_flag_table %}?next={% url 'department_load_summary' %}">
+	    {% if check_all %} (deselect all) {% else %} (select all) {% endif %}
+	  </a>
+	</div> 
+	</td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for course in data_list %}
+      <tr>
+      {% if course.exists %}
+      <td style="color: grey">
+      {% else %}
+      <td> 
+      {% endif %}
+	<label for="option{{course.id}}">{{course.number}}</label></td>
+      {% if course.exists %}
+      <td style="color: grey">
+      {% else %}
+      <td> 
+      {% endif %}
+      {{course.name}}</td>
+      {% if course.exists %}
+      <td style="text-align: center; color: grey">
+      {% else %}
+      <td style="text-align: center;"> 
+      {% endif %}
+      {{course.semester}}</td>
+      {% if course.exists %}
+      <td style="text-align: center; color: grey">
+      {% else %}
+      <td style="text-align: center;"> 
+      {% endif %}
+      {% for meeting in course.meeting_times %}
+	<div>
+	    {{meeting}}
+	</div>
+	{% endfor %}
+      </td>
+      {% if course.exists %}
+      <td style="text-align: center; color: grey">
+      {% else %}
+      <td style="text-align: center;"> 
+      {% endif %}
+      {% for room in course.room_list %}
+	<div>
+	    {{room}}
+	</div>
+	{% endfor %}
+      </td>
+      {% if course.exists %}
+      <td style="text-align: center; color: grey">
+      {% else %}
+      <td style="text-align: center;"> 
+      {% endif %}
+	{% for instructor in course.instructors %}
+	<div>
+	   {{ instructor }}
+	</div>
+	{% endfor %}
+      </td>
+      {% if course.exists %}
+      <td style="text-align: center; color: grey"> </td>
+      {% else %}
+      <td style="text-align: center;"> 
+	{% for note in course.note_list %}
+	<div>
+	   {{ note }}
+	</div>
+	{% endfor %}
+      </td>
+      {% endif %}
+      <td style="text-align: center;">
+	{% if not course.exists %}
+	<input type="checkbox" {% if check_all %} checked = "yes" {% endif %} name="courses_to_copy" id="option{{course.id}}" value={{course.id}} />
+        {% endif %} </td>
+      </tr>
+      {% endfor %}
+  </table>
+  {% for comment in comment_list %}
+  <p>
+    <span class="label label-warning">Warning</span>
+    {{comment}}
+  </p>
+  {% endfor %} {# comment list #}
+
+  <p><input type="submit" alt="register" /></p>
+</form>
+</div>
+
+   <script>
+    $(window).load(function(){
+    $("#nav-deptloadsummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Copy Courses from {{academic_year_copy_from}} to {{academic_year_copy_to}}</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

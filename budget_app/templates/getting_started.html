@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block extrahead %}
+{% endblock %}
+{% block content %}
+
+<style>
+ul.a {list-style-type:circle;}
+ul.b {list-style-type:square;}
+</style>
+
+ <div id="year-accordion2" class="accordion">
+{# Add a new course #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1001">
+	 Add a new course
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1001" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<p> To add a course from scratch, go to <strong> Course Summary </strong>and click the link at the top of the page.</p>
+<img src="{{ STATIC_URL }}img/new_course.png" alt="new course">
+
+<p> Fill in the information for the course, and click on <strong>Submit</strong>.</p>
+<img src="{{ STATIC_URL }}img/create_course.png" alt="new course">
+<p> Note that the "Schedule semester", "Schedule year" and "CRN" options are not
+currently being used, so it doesn't matter what you put there.</p> 
+
+<p> The course will now appear in <strong>Course Summary</strong>, but it will
+not yet have any <strong>Course Offerings</strong> associated with it.</p>
+
+<img src="{{ STATIC_URL }}img/manage_offerings.png" alt="new course">
+
+<p> Click on <strong> Manage Offerings</strong> to create one or more 
+offerings of the new course.  For further help, see <strong> Create a new
+offering of an existing course</strong>.</p>
+
+</div>
+</div>
+</div>
+
+{# Create a new offering of an existing course #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1002">
+	 Create a new offering of an existing course
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1002" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<p> To add or edit offerings of a course that already exists 
+in the database, go to <strong> Course Summary </strong> and click on
+<strong> Manage Offerings</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/manage_offerings.png" alt="new course">
+
+<p> Select the desired semester(s) for the course offering(s) and
+fill in the available load, the maximum enrollment and optional
+comments.  Click on <strong> Submit</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/add_course_offering.png" alt="new course">
+
+<p> The new course offering(s) will now show up in the <strong> Faculty
+Load Summary </strong> (under <strong> Combined</strong>) for the appropriate Academic Year, but no
+meeting times, rooms or professors will be specified.</p>
+
+<img src="{{ STATIC_URL }}img/load_summary_1.png" alt="new course">
+
+<p>For further information about adding meetings times, rooms or professors to a new course offering, 
+see the appropriate help topics.</p>
+
+</div>
+</div>
+</div>
+
+{# Add or edit course meeting time #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1003">
+	 Add or edit the meeting times or rooms for a course offering
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1003" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<p> To add or edit the meeting times or rooms for a course offering, go 
+to <strong> Combined</strong> on the <strong> Faculty Load Summary</strong> page and click on the
+appropriate link in the <strong> Time</strong> or <strong> Room</strong> column.</p>
+
+<img src="{{ STATIC_URL }}img/edit_mtg_or_room_times.png" alt="new course">
+
+<p>If the course offering had no previous offering times, the following page will
+appear.  Choose the desired meeting day(s), time, duration and room and click
+on <strong> Submit</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/new_mtg_times.png" alt="new course">
+
+<p>If the course offering already had offering times and rooms, those may 
+be edited.  Fill in all entries in a given row and click on
+<strong> Submit</strong>.</p>
+
+
+<img src="{{ STATIC_URL }}img/edit_mtg_times.png" alt="new course">
+
+
+</div>
+</div>
+</div>
+
+{# Add or edit professors' loads for a course offering #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1004">
+	 Add or edit professors' loads for a course offering
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1004" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<p> To add or edit professors' loads for a course offering, go 
+to the <strong> Faculty Load Summary</strong> page and click on the
+appropriate link in the <strong> Load</strong> column.</p>
+
+<img src="{{ STATIC_URL }}img/edit_prof_loads_summary.png" alt="new course">
+
+<p>Add or edit the load(s) for the desired professor(s) and click
+on <strong> Submit</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/edit_loads.png" alt="new course">
+
+<p> The <strong>Diff</strong> column shows the difference between
+the <strong> available load</strong> and the <strong> assigned load</strong>
+for a given course.</p>
+
+<img src="{{ STATIC_URL }}img/diff_column.png" alt="new course">
+
+<p> In the above example, there is more load assigned than is
+available for the course offering.</p>
+
+</div>
+</div>
+</div>
+
+
+{# delete an offering of a course #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1006">
+	 Delete a particular offering of a course
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1006" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+
+<p> The following describes how to  <strong> delete
+a particular offering</strong> of a course from the database.  All information regarding
+meeting times, rooms and instructors will also be deleted.
+ <strong>This action cannot be undone.</strong></p>
+
+
+<p> To get started, go to the <strong> Course Summary</strong> page and click 
+on <strong> Manage Offerings </strong>.</p>
+
+<img src="{{ STATIC_URL }}img/delete_course_offering_1.png" alt="new course">
+
+<p> In many cases, it will be unambigous which course offering(s) should be deleted.  Check the
+<strong> Delete </strong> box(es) and click on <strong> Submit</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/delete_course_offering_3.png" alt="new course">
+
+<p> In the following example, it is ambiguous which of the course offerings is to be deleted, since
+the identifying information that is shown is identical.</p>
+<img src="{{ STATIC_URL }}img/delete_course_offering_2.png" alt="new course">
+
+<p> In a case such as this, the <strong> Comments</strong> field can be used to disambiguate the course
+offerings.  Go to <strong> Faculty Load Summary</strong> and click on the <strong> Load </strong> for
+the course offering that is to be deleted.</p>
+
+<img src="{{ STATIC_URL }}img/delete_course_offering_4.png" alt="new course">
+
+<p> Add a distinguishing comment in the <strong> Comment</strong> field and click on <strong> Submit</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/delete_course_offering_5.png" alt="new course">
+
+<p> Now return to the <strong> Course Summary</strong> page and click on <strong> Manage Offerings</strong> again.
+The comment entered previously should now be visible, allowing for the correct course offering to be
+deleted.  Check the appropriate <strong> Delete </strong> box and click on <strong> Submit</strong>.</p>
+
+<img src="{{ STATIC_URL }}img/delete_course_offering_6.png" alt="new course">
+
+
+</div>
+</div>
+</div>
+
+
+
+{# Copy a course offering into the current year #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1007">
+	 Copy a course offering from a previous year to the current year
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1007" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<p> First go to <strong>Profile</strong> and click on <strong> Edit</strong> to choose the <strong> Academic Year </strong> to which courses will be copied.  Also, <strong> Edit</strong> the <strong>Faculty</strong> for that Academic Year, as appropriate.
+
+<img src="{{ STATIC_URL }}img/profile_year.png" alt="new course">
+
+<p>Then go to the <strong> Faculty Load Summary</strong> page and click on the <strong> Copy </strong> link at the top of the page.</p>
+
+<img src="{{ STATIC_URL }}img/copy_courses.png" alt="new course">
+
+<p> Choose the <strong>"copy from"</strong> year.</p>
+
+<img src="{{ STATIC_URL }}img/copy_from_year.png" alt="new course">
+
+<p> Select courses to copy and click on <strong> Submit </strong> (at the bottom of the page -- not shown).</p>
+
+<img src="{{ STATIC_URL }}img/copy_from_page.png" alt="new course">
+
+<p> <strong> Note the following: </strong></p>
+<ul class="a">
+<li> Greyed-out courses already exist in the "copy to" year, so they cannot be copied forward.</li>
+<li> Faculty members listed in parentheses exist in the "copy from" year, but not in the "copy to" year.
+In this case, the course offering will be copied forward, but not the instructor.  (Instructors can
+be added to the "copy to" year under <strong>Profile</strong>.)</li>
+</ul>
+
+
+
+</div>
+</div>
+</div>
+
+
+{# delete a course #}
+   <div class="accordion-group">
+     <div class="accordion-heading">
+       <a class="accordion-toggle"
+	   data-toggle="collapse"
+	   data-parent="#year-accordion2"
+	   href="#1005">
+	 Delete a course (completely) from the database
+	</a>
+       </div>{# accordion-heading #}
+
+      <div id="1005" class="accordion-body collapse">
+	<div class="accordion-inner">
+
+<p> The following describes how to  <strong> completely delete
+a course </strong> and all of its offerings (for every year) from the database.
+ <strong>This action cannot be undone.</strong></p>
+
+<p> Go to the <strong> Course Summary</strong> page and click 
+on <strong> Delete </strong>.
+
+<img src="{{ STATIC_URL }}img/delete_course.png" alt="new course">
+
+<p> There is one final opportunity to back out.  Otherwise click
+<strong> Delete </strong> to seal the deal.</p>
+
+<img src="{{ STATIC_URL }}img/delete_course_final.png" alt="new course">
+
+
+
+</div>
+</div>
+</div>
+
+</div>
+
+  <script>
+    $(window).load(function(){
+    $("#nav-help").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Getting Started</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+
+{% endblock %}
+</div>

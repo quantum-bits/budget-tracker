@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block extrahead %}
+{% endblock %}
+{% block content %}
+ <div class="content-center">
+<table class="table table-striped table-bordered table-hover">
+	     <thead>
+	       <tr>
+		<th colspan="6">Courses</th>
+		</tr>
+	       <tr>
+	       <td> Semester </td>
+	       <td> Number </td>
+	       <td> Name </td>
+	       <td> Credit Hours </td>
+	       <td> Enrl Cap </td>
+	       <td> Times </td>
+	       <td> Room(s) </td>
+	       <td> Instructor(s) [load] </td>
+	       </tr>
+	     </thead>
+	     <tbody>
+{% for course in registrar_data_list %}
+    <tr>
+      <td> {{course.semester}}</td>
+      <td> {% if can_edit %} 
+	<a href="{% url 'update_course' course.course_id %}?next={{ request.path|urlencode }}">{{course.number}}</a>
+	   {% else %} {{course.number}} {% endif %}
+      </td>
+      <td> {{course.name}}</td>
+      <td> {% if can_edit %}
+	<a href="{% url 'update_course' course.course_id %}?next={{ request.path|urlencode }}">{{course.credit_hours}}</a>
+           {% else %} {{course.credit_hours}} {% endif %}
+      </td>
+      <td> {% if can_edit %}
+	<a href="{% url 'update_course_offering' course.course_offering_id %}?next={{ request.path|urlencode }}">{{course.cap}}</a>
+	   {% else %} {{course.cap}} {% endif %}
+      </td>
+      <td>
+      {% for meeting in course.meeting_times_list %}
+	<div>
+	  {% if course.meetings_scheduled %}
+	  {% if can_edit %}
+	  <a href="{% url 'update_class_schedule' course.course_offering_id %}?next={{ request.path|urlencode }}">
+	    {{meeting}}</a>
+	  {% else %} {{meeting}} {% endif %}
+	  {% else %}
+	  {% if can_edit %}
+	  <a href="{% url 'new_class_schedule' course.course_offering_id %}">
+	    {{meeting}}</a>
+	  {% else %} {{meeting}} {% endif %}
+	  {% endif %}
+	</div>
+	{% endfor %}
+      </td>
+      <td>
+      {% for room in course.room_list %}
+	<div>
+	  {% if can_edit %}
+	  <a href="{% url 'update_class_schedule' course.course_offering_id %}?next={{ request.path|urlencode }}">
+	    {{room}}</a>
+	  {% else %} {{room}} {% endif %}
+	</div>
+	{% endfor %}
+      </td>
+      <td> 
+	{% for instructor in course.instructor_list %}
+	<div>
+	  {% if can_edit %}
+	  <a href="{% url 'update_course_offering' course.course_offering_id %}?next={{ request.path|urlencode }}">
+	    {{instructor}}</a>
+	  {% else %} {{instructor}} {% endif %}
+	</div>
+	{% endfor %}
+      </td>
+    </tr>
+{% endfor %}
+</tbody>
+{% if can_edit %}
+<p> Add a <a href="{% url 'add_course' %}">new course</a>.</p>
+{% endif %}
+
+</table>
+</div>
+
+  <script>
+    $(window).load(function(){
+    $("#nav-schedule").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Registrar Schedule ({{department}}, {{academic_year}})</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+
+{% endblock %}

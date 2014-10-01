@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+   <div class="content-center">
+     {% if errordict.formset_error %}
+        <p class="error"> {{errordict.formset_error}} </p>
+     {% endif %}
+     {% if errordict.room %}
+        <p class="error"> A room needs to be specified for each class period. </p>
+     {% endif %}
+     {% if errordict.begin_at %}
+        <p class="error"> A beginning time needs to be specified (e.g., 9:00). </p>
+     {% endif %}
+     {% if errordict.end_at %}
+        <p class="error"> An ending time needs to be specified (e.g., 9:50). </p>
+     {% endif %}
+    <form action="" method="post">
+      {% csrf_token %}
+      <div class="cyoc_div">
+	{{ formset.management_form }}
+	<table class="table table-striped table-bordered table-hover table-condensed">
+	<tr>
+	<td> Day </td>
+	<td> Begin Time </td>
+	<td> End Time </td>
+	<td> Room </td>
+	<td> Delete </td>
+	</tr>
+	{% for subform in formset %}
+	<tr>
+        <td>{{subform.id}} {{ subform.day }}</td>
+	<td>{{subform.id}} {{ subform.begin_at }}</td>
+	<td>{{subform.id}} {{ subform.end_at }}</td>
+	<td>{{subform.id}} {{ subform.room }}</td>
+	<td>{{subform.id}} {{ subform.DELETE }} </td>
+	</tr>
+	{% endfor %}
+	</table>
+      </div>
+
+      <p><input type="submit" alt="register" /></p>
+    </form>
+  </div>
+
+   <script>
+    $(window).load(function(){
+    $("#nav-deptloadsummary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>{{course}}</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+   </script>
+
+{% endblock %}

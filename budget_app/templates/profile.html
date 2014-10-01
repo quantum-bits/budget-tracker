@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+  <div class="alert alert-student-info">
+    <table class="table table-striped table-bordered table-hover">
+      <tbody>
+	<tr>
+	  <th>Login
+	  </th>
+	  <td>{{ username }}</td>
+	</tr>
+	<tr>
+	  <th>Permission</th>
+	  <td>
+	    {% if can_edit == False %}
+	      Read-only
+	    {% else %}
+	      Can edit
+	    {% endif %}
+	  </td>
+	</tr>
+	<tr>
+	  <th>Fiscal Year (<a href="{% url 'update_year_to_view' id %}?next={{request.path|urlencode }}">Edit</a>)</th>
+	  <td>{{ fiscal_year }}</td>
+	</tr>
+	<tr>
+	  <th>Faculty (<a href="{% url 'update_faculty_to_view' id %}?next={{request.path|urlencode }}">Edit</a>)</th>
+	  <td>
+	    {% for faculty in faculty_list %}
+	    <div>
+	      {{faculty}}
+	    </div>
+	    {% endfor %}
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+ </div>
+  <script>
+    $(window).load(function(){
+    $("#nav-profile").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Profile</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+{% endblock %}

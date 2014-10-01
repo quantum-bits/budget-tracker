@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+ <div class="content-center">
+    <form method="post">
+      {% csrf_token %} {% if form.errors %}
+
+      <p>Please correct the following fields:</p>{% endif %}
+
+      <div class="addNote_div">
+        {% if form.note.errors %}
+
+        <p class="error">{{ form.note.errors }}</p>{% endif %}
+
+        <p><label form="courses" if="" form.note.errors="" class="error" endif=
+        "">Note:</label></p>
+
+        <p>{{ form.note }}</p>
+      </div>
+
+      <p><input type="submit" alt="register" /></p>
+    </form>
+  </div>
+
+  <script>
+    $(window).load(function(){
+    $("#nav-notes").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Add Note</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+{% endblock %}
