@@ -23,37 +23,6 @@ LOG_FILENAME = 'constraint.log'
 logging.basicConfig(filename=LOG_FILENAME, level = logging.DEBUG, filemode = 'w')
 
 
-#class University(StampedModel):
-#    """University. Top-level organizational entity."""
-#    name = models.CharField(max_length=100)
-#    url = models.URLField()
-
-#    class Meta:
-#        verbose_name_plural = 'universities'
-
-#    def __unicode__(self):
-#        return self.name
-
-
-#class School(StampedModel):
-#    """School within university. Some institutions refer to this as a 'college' or 'division'."""
-#    name = models.CharField(max_length=100)
-#    university = models.ForeignKey(University, related_name='schools')
-
-#    def __unicode__(self):
-#        return self.name
-
-
-#class Department(models.Model):
-#    """Academic department"""
-#    # not every department has a convient abbreviation.
-#    abbrev = models.CharField(max_length=10, blank=True)
-#    name = models.CharField(max_length=100)
-#    school = models.ForeignKey(School, related_name='departments')
-
-#    def __unicode__(self):
-#        return self.name
-
 class FiscalYear(models.Model):
     begin_on = models.DateField()
     end_on = models.DateField()

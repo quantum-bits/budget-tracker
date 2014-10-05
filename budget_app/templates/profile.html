@@ -23,16 +23,6 @@
 	  <th>Fiscal Year (<a href="{% url 'update_year_to_view' id %}?next={{request.path|urlencode }}">Edit</a>)</th>
 	  <td>{{ fiscal_year }}</td>
 	</tr>
-	<tr>
-	  <th>Faculty (<a href="{% url 'update_faculty_to_view' id %}?next={{request.path|urlencode }}">Edit</a>)</th>
-	  <td>
-	    {% for faculty in faculty_list %}
-	    <div>
-	      {{faculty}}
-	    </div>
-	    {% endfor %}
-	  </td>
-	</tr>
       </tbody>
     </table>
  </div>
