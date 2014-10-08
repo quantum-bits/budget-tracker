@@ -1,0 +1,6 @@
+#!/bin/bash -x
+
+# Deploy configuration files to proper locations in file system.
+
+cp budget-nginx.conf /etc/nginx/sites-available
+cp budget-supervisor.conf /etc/supervisor/conf.d
