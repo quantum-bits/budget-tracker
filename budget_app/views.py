@@ -69,7 +69,7 @@ def budget_entries(request):
 
     expense_list = []
     for expense in Expense.objects.all():
-        if expense.date < fiscal_year.end_on and expense.date > fiscal_year.begin_on:
+        if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
             if expense.include_expense(user_preferences):
                 expense_list.append(expense)
 
