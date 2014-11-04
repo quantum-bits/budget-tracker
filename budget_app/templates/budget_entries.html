@@ -39,6 +39,7 @@
 	<tr>
 	<td> Date </td>
 	<td> Description </td>
+	<td> Note </td>
 	<td style="text-align: center;"> Budget Line </td>
 	<td style="text-align: center;"> Debit </td>
 	<td style="text-align: center;"> Credit </td>
@@ -53,12 +54,13 @@
 	    <tr>
 	      <td> {{expense.date}} </td>
 	      <td> {{expense.description}}</td>
+	      <td title="{{expense.extra_note}}"> {{expense.abbrev_note}}</td>
 	      <td> 
 		{% if expense.expense_budget_line.all.count > 1 %}
 		{% for ebl in expense.expense_budget_line.all %}
 		<div>
 	         {{ ebl.budget_line.code }}{% if ebl.subaccount != None %} ({{ ebl.subaccount }}){% endif %}: 
-		   {% if ebl.debit_or_credit == ebl.DEBIT %} ({{ebl.amount }}) {% else %} {{ebl.amount}} {% endif %} 
+		   {% if ebl.debit_or_credit == ebl.DEBIT %} ({{ebl.formattedprice }}) {% else %} {{ebl.formattedprice}} {% endif %} 
 		</div>
 		{% endfor %}
 		{% else %}
@@ -68,11 +70,11 @@
 		{% endif %}
 	      </td>
 	      {% if expense.total_debit > 0 %} 
-	        <td> {{expense.total_debit}} </td>
+	        <td> {{expense.total_debit_string}} </td>
 	      {% else %} <td></td>
 	      {% endif %}
 	      {% if expense.total_credit > 0 %} 
-	        <td> {{expense.total_credit}} </td>
+	        <td> {{expense.total_credit_string}} </td>
 	      {% else %} <td></td>
 	      {% endif %}
 	      <td style="text-align: center;"> {% if expense.checked %} x 

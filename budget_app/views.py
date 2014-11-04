@@ -72,6 +72,7 @@ def budget_entries(request):
         if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
             if expense.include_expense(user_preferences):
                 expense_list.append(expense)
+                print expense.abbrev_note()
 
     context = { 
         'user_preferences': user_preferences,
@@ -99,10 +100,10 @@ def budget_line_entries(request):
                 ebl_list.append(expense_budget_line)
         budget_line_list.append({'budget_line': budget_line, 
                                  'expense_budget_line_list': ebl_list,
-                                 'total_debit': budget_line.total_debit(user_preferences),
-                                 'total_credit': budget_line.total_credit(user_preferences),
-                                 'budget_line_available': budget_line.amount_available,
-                                 'budget_line_remaining': budget_line.amount_remaining(user_preferences)})
+                                 'total_debit': dollar_format(budget_line.total_debit(user_preferences)),
+                                 'total_credit': dollar_format(budget_line.total_credit(user_preferences)),
+                                 'budget_line_available': dollar_format(budget_line.amount_available),
+                                 'budget_line_remaining': dollar_format(budget_line.amount_remaining(user_preferences))})
 
     context = {
         'user_preferences': user_preferences,
@@ -112,6 +113,9 @@ def budget_line_entries(request):
         }
     return render(request, 'budget_line_entries.html', context)
 
+
+def dollar_format(amount):
+    return "{0:.2f}".format(amount)
 
 @login_required
 def subaccount_entries(request):
@@ -131,10 +135,10 @@ def subaccount_entries(request):
                 ebl_list.append(expense_budget_line)
         subaccount_list.append({'subaccount': subaccount, 
                                 'expense_budget_line_list': ebl_list,
-                                'total_debit': subaccount.total_debit(user_preferences),
-                                'total_credit': subaccount.total_credit(user_preferences),
-                                'subaccount_available': subaccount.amount_available,
-                                'subaccount_remaining': subaccount.amount_remaining(user_preferences)})
+                                'total_debit': dollar_format(subaccount.total_debit(user_preferences)),
+                                'total_credit': dollar_format(subaccount.total_credit(user_preferences)),
+                                'subaccount_available': dollar_format(subaccount.amount_available),
+                                'subaccount_remaining': dollar_format(subaccount.amount_remaining(user_preferences))})
 
     context = { 
         'user_preferences': user_preferences,

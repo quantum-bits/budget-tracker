@@ -55,8 +55,17 @@ class SubAccount(models.Model):
                     tot = tot + expense_budget_line.amount
         return tot
 
+#    def total_credit_formatted(self, user_preferences):
+#        return 
+
+#    def amount_available_formatted(self):
+#        return "{0:.2f}".format(self.amount_available)
+
     def amount_remaining(self, user_preferences):
         return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
+
+#    def amount_remaining_formatted(self, user_preferences):
+#        return "{0:.2f}".format(self.amount_remaining(user_preferences))
 
     def __unicode__(self):
         return self.abbrev
@@ -79,6 +88,9 @@ class BudgetLine(models.Model):
     class Meta:
         ordering = [ 'code' ]
 
+#    def amount_available_formatted(self):
+#        return "{0:.2f}".format(self.amount_available)
+
     def total_debit(self, user_preferences):
         tot = 0
         for expense_budget_line in self.expense_budget_line.all():
@@ -98,6 +110,8 @@ class BudgetLine(models.Model):
     def amount_remaining(self, user_preferences):
         return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
 
+#    def amount_remaining_formatted(self, user_preferences):
+#        return "{0:.2f}".format(self.amount_remaining(user_preferences))
 
     def __unicode__(self):
         return '{0} ({1})'.format(self.code, self.name)
@@ -147,6 +161,15 @@ class Expense(models.Model):
 
 #    further action required (what?)
 
+    def abbrev_note(self):
+        num_slice = 15
+        note = self.extra_note
+        char_num = note.find(' ',num_slice,len(note))
+        if char_num == -1:
+            return note
+        else:
+            return note[:char_num].strip()+'....'
+
     def total_debit(self):
         total_amount = 0
         for expense_budget_line in self.expense_budget_line.all():
@@ -154,12 +177,20 @@ class Expense(models.Model):
                 total_amount = total_amount+expense_budget_line.amount
         return total_amount
 
+    def total_debit_string(self):
+        return "{0:.2f}".format(self.total_debit())
+#        return total_amount
+
     def total_credit(self):
         total_amount = 0
         for expense_budget_line in self.expense_budget_line.all():
             if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
                 total_amount = total_amount+expense_budget_line.amount
         return total_amount
+
+    def total_credit_string(self):
+        return "{0:.2f}".format(self.total_credit())
+#        return total_amount
 
     def include_expense(self, user_preferences):
         if not(self.checked == False and user_preferences.view_checked_only == True) and not(self.encumbered == False and user_preferences.view_encumbrances_only == True) and not(self.future_expense == False and user_preferences.view_future_only == True):
