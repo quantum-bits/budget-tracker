@@ -73,12 +73,14 @@ class SubAccount(models.Model):
     class Meta:
         ordering = [ 'abbrev' ]
 
+class Department(models.Model):
+    name = models.CharField(max_length=80)
 
 class BudgetLine(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=40)
     has_subaccounts = models.BooleanField(default = False)
-#    department = models.ForeignKey(Department, related_name = 'budget_lines')
+    department = models.ForeignKey(Department, null=True, related_name = 'budget_lines')
     fiscal_year = models.ForeignKey(FiscalYear, related_name = 'budget_lines')
     amount_available = models.DecimalField(max_digits = 10, decimal_places=2)
 #    expense = models.ForeignKey(Expense, related_name='budget_line')

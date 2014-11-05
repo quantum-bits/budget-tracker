@@ -24,6 +24,4 @@ admin.site.register(Expense, ExpenseAdmin)
 admin.site.register(SubAccount)
 admin.site.register(CreditCard)
 admin.site.register(ExpenseBudgetLine)
-
-
-
+admin.site.register(Department)

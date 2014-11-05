@@ -1,5 +1,7 @@
 Django==1.5.3
+PIL==1.1.7
 Pillow==2.6.0
 django-debug-toolbar==0.9.4
 gunicorn==18.0
+wsgiref==0.1.2
 xlwt==0.7.5
