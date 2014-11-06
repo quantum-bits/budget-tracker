@@ -76,6 +76,10 @@ class SubAccount(models.Model):
 class Department(models.Model):
     name = models.CharField(max_length=80)
 
+    def __unicode__(self):
+        return self.name
+
+
 class BudgetLine(models.Model):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=40)
