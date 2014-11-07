@@ -25,6 +25,7 @@ def home(request):
     return render(request, 'home.html')
 
 
+#span for subaccount page: http://stackoverflow.com/questions/257505/css-fixed-width-in-a-span
 
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
@@ -72,7 +73,7 @@ def budget_entries(request):
         if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
             if expense.include_expense(user_preferences):
                 expense_list.append(expense)
-                print expense.abbrev_note()
+#                print expense.abbrev_note()
 
     context = { 
         'user_preferences': user_preferences,
@@ -92,24 +93,35 @@ def budget_line_entries(request):
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
 
-    budget_line_list = []
-    for budget_line in BudgetLine.objects.filter(fiscal_year__id=fiscal_year.id):
-        ebl_list = []
-        for expense_budget_line in budget_line.expense_budget_line.all():
-            if expense_budget_line.expense.include_expense(user_preferences):
-                ebl_list.append(expense_budget_line)
-        budget_line_list.append({'budget_line': budget_line, 
-                                 'expense_budget_line_list': ebl_list,
-                                 'total_debit': dollar_format(budget_line.total_debit(user_preferences)),
-                                 'total_credit': dollar_format(budget_line.total_credit(user_preferences)),
-                                 'budget_line_available': dollar_format(budget_line.amount_available),
-                                 'budget_line_remaining': dollar_format(budget_line.amount_remaining(user_preferences))})
+    department_list = []
+    for department in Department.objects.all():
+        budget_line_list = []
+        for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=department.id)):
+            ebl_list = []
+            for expense_budget_line in budget_line.expense_budget_line.all():
+                if expense_budget_line.expense.include_expense(user_preferences):
+                    ebl_list.append(expense_budget_line)
+            total_debit_minus_credit = budget_line.total_debit(user_preferences)-budget_line.total_credit(user_preferences)
+            if total_debit_minus_credit < 0:
+                d_m_c_string = "("+dollar_format(total_debit_minus_credit)+")"
+            else:
+                d_m_c_string = dollar_format(total_debit_minus_credit)
+
+            budget_line_list.append({'budget_line': budget_line, 
+                                     'expense_budget_line_list': ebl_list,
+                                     'total_debit': dollar_format(budget_line.total_debit(user_preferences)),
+                                     'total_credit': dollar_format(budget_line.total_credit(user_preferences)),
+                                     'total_debit_minus_credit': d_m_c_string,
+                                     'budget_line_available': dollar_format(budget_line.amount_available),
+                                     'budget_line_remaining': dollar_format(budget_line.amount_remaining(user_preferences))})
+        department_list.append({'department': department,
+                                'budget_line_list': budget_line_list})
 
     context = {
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'budget_line_list': budget_line_list
+        'department_list': department_list
         }
     return render(request, 'budget_line_entries.html', context)
 
@@ -133,10 +145,18 @@ def subaccount_entries(request):
         for expense_budget_line in subaccount.expense_budget_line.all():
             if expense_budget_line.expense.include_expense(user_preferences):
                 ebl_list.append(expense_budget_line)
+        
+        total_debit_minus_credit = subaccount.total_debit(user_preferences)-subaccount.total_credit(user_preferences)
+        if total_debit_minus_credit < 0:
+            d_m_c_string = "("+dollar_format(total_debit_minus_credit)+")"
+        else:
+            d_m_c_string = dollar_format(total_debit_minus_credit)
+                
         subaccount_list.append({'subaccount': subaccount, 
                                 'expense_budget_line_list': ebl_list,
                                 'total_debit': dollar_format(subaccount.total_debit(user_preferences)),
                                 'total_credit': dollar_format(subaccount.total_credit(user_preferences)),
+                                'total_debit_minus_credit': d_m_c_string,
                                 'subaccount_available': dollar_format(subaccount.amount_available),
                                 'subaccount_remaining': dollar_format(subaccount.amount_remaining(user_preferences))})
 

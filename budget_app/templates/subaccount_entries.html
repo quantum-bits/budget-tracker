@@ -2,6 +2,12 @@
 
 {% block content %}
 
+<style type="text/css">
+div.f1 { float: left; width: 150px; }
+div.f2 { float: left; text-align: right; width: 250px; }
+div.f3 { clear: both; }
+</style>
+
 <form action=""  method="post">
   {% csrf_token %}
 
@@ -42,7 +48,11 @@
 	   data-toggle="collapse"
 	   data-parent="#year-accordion"
 	   href="#{{row.subaccount.id}}">
-	 {{row.subaccount.abbrev}} ({{row.subaccount.name}}): {{row.subaccount_remaining}}
+	 <div class="f1">{{row.subaccount.abbrev}}</div>
+	 <div class="f2">
+	   {{row.subaccount_available}} - {{row.total_debit_minus_credit}} = {{row.subaccount_remaining}}
+	 </div><div class="f3"></div>
+	 
 	</a>
        </div>{# accordion-heading #}
 
@@ -74,9 +84,9 @@
 	         {{ ebl.budget_line.code }}
 	      </td>
 	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
-	        <td> {{ebl.amount}} </td> <td></td>
+	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
 	      {% else %}
-	        <td></td> <td> {{ebl.amount}} </td>
+	        <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
 	      {% endif %}
 	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
 		{% else %}
@@ -88,22 +98,22 @@
 	    {% endfor %}
 	    <tr>
 	      <td colspan="3" style="text-align: right;"> <strong>Totals </strong> </td> 
-	      <td> <strong>{{row.total_debit}} </strong></td>
-	      <td> <strong>{{row.total_credit}} </strong></td>
+	      <td style="text-align: right;"> <strong>{{row.total_debit}} </strong></td>
+	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
 	    </tr>
 	    <tr>
 	      <td colspan="3" style="text-align: right;"> <strong>Budget </strong> </td> 
-	      <td colspan="2"> <strong>{{row.subaccount_available}}</strong> </td>
+	      <td colspan="2" style="text-align: right;"> <strong>{{row.subaccount_available}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
 	    </tr>
 	    <tr>
 	      <td colspan="3" style="text-align: right;"> <strong>Remaining </strong> </td> 
-	      <td colspan="2"> <strong>{{row.subaccount_remaining}}</strong> </td>
+	      <td colspan="2" style="text-align: right;"> <strong>{{row.subaccount_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>

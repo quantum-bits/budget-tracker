@@ -35,7 +35,7 @@ class FiscalYear(models.Model):
 
 class SubAccount(models.Model):
     name = models.CharField(max_length=40)
-    abbrev = models.CharField(max_length=10)
+    abbrev = models.CharField(max_length=30)
     amount_available = models.DecimalField(max_digits = 10, decimal_places=2)
     fiscal_year = models.ForeignKey(FiscalYear, related_name = 'subaccounts')
 

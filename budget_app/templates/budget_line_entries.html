@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<style type="text/css">
+div.f1 { float: left; width: 250px; }
+div.f2 { float: left; text-align: right; width: 250px; }
+div.f3 { clear: both; }
+</style>
+
 <form action=""  method="post">
   {% csrf_token %}
 
@@ -27,23 +34,25 @@
 <p><input type="submit" alt="register" /></p>
 </div>
 
-
 <a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
 <p></p>
 
 </div>
 
-
+{% for department in department_list %}
+<h2> {{ department.department }}</h2>
  <div id="year-accordion" class="accordion">
-{% for row in budget_line_list %}
+{% for row in department.budget_line_list %}
    <div class="accordion-group">
      <div class="accordion-heading">
        <a class="accordion-toggle"
 	   data-toggle="collapse"
 	   data-parent="#year-accordion"
 	   href="#{{row.budget_line.id}}">
-	 {{row.budget_line}}: {{row.budget_line_remaining}}
-	</a>
+	 <div class="f1">{{row.budget_line}}</div>
+	 <div class="f2">
+	 {{row.budget_line_available}} - {{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
+	 </a>
        </div>{# accordion-heading #}
 
       <div id="{{row.budget_line.id}}" class="accordion-body collapse">
@@ -74,9 +83,9 @@
 	         {% if ebl.subaccount != None %} {{ ebl.subaccount }}{% endif %} 
 	      </td>
 	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
-	        <td> {{ebl.amount}} </td> <td></td>
+	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
 	      {% else %}
-	        <td></td> <td> {{ebl.amount}} </td>
+	        <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
 	      {% endif %}
 
 	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
@@ -89,22 +98,22 @@
 	    {% endfor %}
 	    <tr>
 	      <td colspan="3" style="text-align: right;"> <strong>Totals </strong> </td> 
-	      <td> <strong>{{row.total_debit}} </strong></td>
-	      <td> <strong>{{row.total_credit}} </strong></td>
+	      <td style="text-align: right;"> <strong>{{row.total_debit}} </strong></td>
+	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
 	    </tr>
 	    <tr>
 	      <td colspan="3" style="text-align: right;"> <strong>Budget </strong> </td> 
-	      <td colspan="2"> <strong>{{row.budget_line_available}}</strong> </td>
+	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_available}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
 	    </tr>
 	    <tr>
 	      <td colspan="3" style="text-align: right;"> <strong>Remaining </strong> </td> 
-	      <td colspan="2"> <strong>{{row.budget_line_remaining}}</strong> </td>
+	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
@@ -120,6 +129,7 @@
 </div>
 {% endfor %}
 </div>
+{% endfor %}
 
   <script>
     $(window).load(function(){
