@@ -24,8 +24,7 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
-
-#span for subaccount page: http://stackoverflow.com/questions/257505/css-fixed-width-in-a-span
+#fy.begin_on.strftime("%b") (gives 'Jun', for example)
 
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
@@ -129,6 +128,16 @@ def budget_line_entries(request):
 def dollar_format(amount):
     return "{0:.2f}".format(amount)
 
+def dollar_format_parentheses(amount, include_zero):
+    if amount>0:
+        return "{0:.2f}".format(amount)
+    elif amount<0:
+        return "({0:.2f})".format(-amount)
+    elif amount==0 and include_zero:
+        return '0.00'
+    else:
+        return ''
+
 @login_required
 def subaccount_entries(request):
     user = request.user
@@ -167,6 +176,109 @@ def subaccount_entries(request):
         'subaccount_list': subaccount_list
         }
     return render(request, 'subaccount_entries.html', context)
+
+@login_required
+def summary(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    if request.method == 'POST':
+        process_preferences_and_checked_form(request, user_preferences)
+
+    month_list = list_of_months_in_fy(fiscal_year)
+# now construct something that can be used as a key/column heading: 'Jun-14' or something; maybe that can be
+# done by the list_of_months_in_fy method
+
+    print month_list
+    month_name_list=[]
+    for month, year, year_name in month_list:
+        month_name_list.append(year_name)
+
+    department_list = []
+    for department in Department.objects.all():
+        budget_line_list = []
+        department_totals_list=[]
+        department_total = 0
+        budget_total = 0
+        for month, year, year_name in month_list:
+            department_totals_list.append(dollar_format_parentheses(department.total_for_month(user_preferences, month, year),True))
+        for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=department.id)):
+            data_entries = []
+            budget_total = budget_total+budget_line.amount_available
+            for month, year, year_name in month_list:
+                note = budget_line.retrieve_breakdown(user_preferences,month, year)
+                entry = budget_line.credit_month(user_preferences,month, year)-budget_line.debit_month(user_preferences,month, year)
+                data_entries.append({'amount': dollar_format_parentheses(entry,False), 'breakdown':note})
+                department_total = department_total + entry
+
+            total_budget_line = budget_line.total_credit(user_preferences)-budget_line.total_debit(user_preferences)
+
+            budget_remaining_in_line = budget_line.amount_remaining(user_preferences)
+            budget_remaining_is_negative = False
+            if budget_remaining_in_line < 0:
+                budget_remaining_is_negative = True
+
+            budget_line_list.append({'budget_line': budget_line,
+                                     'data_entries': data_entries,
+                                     'total_debit_minus_credit': dollar_format_parentheses(total_budget_line,True),
+                                     'budget_line_available': dollar_format_parentheses(budget_line.amount_available,True),
+                                     'budget_line_remaining': dollar_format_parentheses(budget_remaining_in_line,True),
+                                     'remaining_negative': budget_remaining_is_negative})
+        budget_remaining = budget_total+department_total
+        budget_remaining_is_negative = False
+        if budget_remaining < 0:
+            budget_remaining_is_negative = True
+        department_list.append({'department': department,
+                                'budget_line_list': budget_line_list,
+                                'month_name_list': month_name_list,
+                                'department_totals_list': department_totals_list,
+                                'department_total': dollar_format_parentheses(department_total,True),
+                                'budget_total': dollar_format_parentheses(budget_total,True),
+                                'budget_remaining':dollar_format_parentheses(budget_remaining,True),
+                                'budget_remaining_is_negative': budget_remaining_is_negative})
+
+    context = {
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': fiscal_year,
+        'department_list': department_list
+        }
+    return render(request, 'summary.html', context)
+
+
+def list_of_months_in_fy(fy):
+    begin_month = fy.begin_on.month
+    begin_year = fy.begin_on.year
+    end_month = fy.end_on.month
+    end_year = fy.end_on.year
+
+    month_dict={1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun',
+                7:'Jul', 8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'}
+    if begin_year > end_year:
+        return []
+    if (begin_year == end_year) and (begin_month>end_month):
+        return []
+    month_list = []
+    month = begin_month
+    year = begin_year
+    end_reached = False
+    while not end_reached:
+        month_list.append([month, year, month_dict[month]+" '"+str(year%100)])
+        month = month+1
+        if month == 13:
+            month = 1
+            year = year+1
+        if (year > end_year) or ((year == end_year) and (month > end_month)):
+            end_reached = True
+    return month_list
+
+
+
+
+
+
 
 @login_required
 def new_budget_entry(request, id = None):

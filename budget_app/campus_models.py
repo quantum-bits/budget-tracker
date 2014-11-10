@@ -3,7 +3,7 @@ from django.db import models
 from itertools import chain
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
-
+from django.db.models import Q
 
 # user.is_superuser can be used to signal that someone can mess with the
 # budget....  (it's boolean)
@@ -55,17 +55,8 @@ class SubAccount(models.Model):
                     tot = tot + expense_budget_line.amount
         return tot
 
-#    def total_credit_formatted(self, user_preferences):
-#        return 
-
-#    def amount_available_formatted(self):
-#        return "{0:.2f}".format(self.amount_available)
-
     def amount_remaining(self, user_preferences):
         return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
-
-#    def amount_remaining_formatted(self, user_preferences):
-#        return "{0:.2f}".format(self.amount_remaining(user_preferences))
 
     def __unicode__(self):
         return self.abbrev
@@ -79,6 +70,11 @@ class Department(models.Model):
     def __unicode__(self):
         return self.name
 
+    def total_for_month(self, user_preferences, month, year):
+        tot = 0
+        for budget_line in self.budget_lines.all():
+            tot = tot+budget_line.credit_month(user_preferences, month, year)-budget_line.debit_month(user_preferences, month, year)
+        return tot
 
 class BudgetLine(models.Model):
     code = models.CharField(max_length=10)
@@ -87,15 +83,9 @@ class BudgetLine(models.Model):
     department = models.ForeignKey(Department, null=True, related_name = 'budget_lines')
     fiscal_year = models.ForeignKey(FiscalYear, related_name = 'budget_lines')
     amount_available = models.DecimalField(max_digits = 10, decimal_places=2)
-#    expense = models.ForeignKey(Expense, related_name='budget_line')
-#    subaccount = models.ManyToManyField(SubAccount,
-#                                 blank=True, null=True,
-#                                 related_name='budget_line')
+
     class Meta:
         ordering = [ 'code' ]
-
-#    def amount_available_formatted(self):
-#        return "{0:.2f}".format(self.amount_available)
 
     def total_debit(self, user_preferences):
         tot = 0
@@ -113,16 +103,53 @@ class BudgetLine(models.Model):
                     tot = tot + expense_budget_line.amount
         return tot
 
+    def debit_month(self, user_preferences, month, year):
+        tot = 0
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                    tot = tot + expense_budget_line.amount
+        return tot
+
+    def credit_month(self, user_preferences, month, year):
+        tot = 0
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    tot = tot + expense_budget_line.amount
+        return tot
+
     def amount_remaining(self, user_preferences):
         return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
 
-#    def amount_remaining_formatted(self, user_preferences):
-#        return "{0:.2f}".format(self.amount_remaining(user_preferences))
+
+
+    def retrieve_breakdown(self, user_preferences, month, year):
+        text_block=''
+        num_chars_expense = 11
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
+                is_credit = False
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    is_credit = True
+                amount_string = dollar_format_local(expense_budget_line.amount, is_credit)
+                space_len = max(0,num_chars_expense-len(amount_string))
+                filler = space_len*' '
+                text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
+        return text_block
 
     def __unicode__(self):
         return '{0} ({1})'.format(self.code, self.name)
 
-
+def dollar_format_local(amount,is_credit):
+    if is_credit:
+        return "{0:.2f}".format(amount)
+    else:
+        return "({0:.2f})".format(amount)
 
 class DepartmentMember(Person):
     RANK_CHOICES = (('Inst', 'Instructor'),
@@ -153,11 +180,6 @@ class Expense(models.Model):
     checked = models.BooleanField(default = False)
     encumbered = models.BooleanField(default = False)
     future_expense = models.BooleanField(default = False)
-
-#    budget_code = models.ManyToManyField(BudgetLine, through='ExpenseBudgetLine',
-#    budget_code = models.ManyToManyField(ExpenseBudgetLine,
-#                                         blank=True, null=True,
-#                                         related_name='expense')
     description = models.CharField(max_length=50)
     charged_by = models.ForeignKey(DepartmentMember, blank=True, null=True, related_name='expense')
 
