@@ -8,6 +8,7 @@ urlpatterns = patterns(
     url(r'^profile/$', 'profile', name='profile'),
     url(r'^budgetentries/$', 'budget_entries', name='budget_entries'),
     url(r'^budgetlineentries/$', 'budget_line_entries', name='budget_line_entries'),
+    url(r'^budgetlineentries/(\d+)/$', 'budget_line_entries', name='budget_line_entries'),
     url(r'^subaccountentries/$', 'subaccount_entries', name='subaccount_entries'),
     url(r'^summary/$', 'summary', name='summary'),
     url(r'^newbudgetentry/$', 'new_budget_entry', name='new_budget_entry'),

@@ -92,6 +92,18 @@
     </table>
  </div>
 
+<div class="content-center">
+
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+
+<a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
+<p></p>
+
+</div>
+
+
 </form>
 
 <!--

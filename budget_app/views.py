@@ -83,12 +83,13 @@ def budget_entries(request):
     return render(request, 'budget_entries.html', context)
 
 @login_required
-def budget_line_entries(request):
+def budget_line_entries(request, id = None):
     user = request.user
 # assumes that users each have exactly ONE UserPreferences object
     user_preferences = user.user_preferences.all()[0]
     fiscal_year = user_preferences.fiscal_year_to_view
 
+    
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
 
@@ -116,11 +117,19 @@ def budget_line_entries(request):
         department_list.append({'department': department,
                                 'budget_line_list': budget_line_list})
 
+    if id == None:
+        unchecked_only = False
+    else:
+        if user_preferences.view_checked_only:
+            unchecked_only = False
+        else:
+            unchecked_only = True
     context = {
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'department_list': department_list
+        'department_list': department_list,
+        'unchecked_only': unchecked_only
         }
     return render(request, 'budget_line_entries.html', context)
 
@@ -191,8 +200,7 @@ def summary(request):
 # now construct something that can be used as a key/column heading: 'Jun-14' or something; maybe that can be
 # done by the list_of_months_in_fy method
 
-    print month_list
-    month_name_list=[]
+    month_name_list = []
     for month, year, year_name in month_list:
         month_name_list.append(year_name)
 
@@ -356,6 +364,7 @@ def new_budget_entry(request, id = None):
 
 def process_preferences_and_checked_form(request, user_preferences):
     expenses_to_check_list= request.POST.getlist('expense_check_flag')
+
     for expense_id in expenses_to_check_list:
         expense = Expense.objects.get(pk = expense_id)
         expense.checked = True

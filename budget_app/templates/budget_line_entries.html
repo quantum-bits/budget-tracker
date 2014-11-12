@@ -70,12 +70,20 @@ div.f3 { clear: both; }
 	<td style="text-align: center;"> Subaccount </td>
 	<td style="text-align: center;"> Debit </td>
 	<td style="text-align: center;"> Credit </td>
-	<td style="text-align: center;"> Checked </td>
+	<td style="text-align: center;"> Checked 
+	  {% if not user_preferences.view_checked_only %}
+	    {% if not unchecked_only %} <a href="{% url 'budget_line_entries' 1 %}"> [-] </a> 
+	    {% else %} <a href="{% url 'budget_line_entries' %}"> [+] </a> 
+	    {% endif %}
+	  {% endif %}
+	</td>
 	<td style="text-align: center;"> Encumbrance </td>
 	<td style="text-align: center;"> Future </td>
 	</thead>
       <tbody>
 	    {% for ebl in row.expense_budget_line_list %}
+	    {% if unchecked_only and ebl.expense.checked %}
+	    {% else %}
 	    <tr>
 	      <td> {{ebl.expense.date}} </td>
 	      <td> {{ebl.expense.description}}</td>
@@ -95,9 +103,15 @@ div.f3 { clear: both; }
 	      <td style="text-align: center;"> {% if ebl.expense.encumbered %} x {% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.future_expense %} x {% endif %} </td>
 	    </tr>
+	    {% endif %}
 	    {% endfor %}
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Totals </strong> </td> 
+	      <td colspan="3" style="text-align: right;"> <strong>Totals 
+	      {% if not user_preferences.view_checked_only %}
+	      {% if unchecked_only %} <strong style ="color: red">(may be innacurate, since only unchecked entries are being shown) </strong>
+	      {% endif %}
+	      {% endif %}
+	      </strong> </td>
 	      <td style="text-align: right;"> <strong>{{row.total_debit}} </strong></td>
 	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
 	      <td></td>
@@ -122,15 +136,26 @@ div.f3 { clear: both; }
     </table>
  </div>
 
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% endfor %}
+
+<div class="content-center">
+
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+
+<a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
+<p></p>
+
+</div>
+
+
 </form>
-
-</div>
-</div>
-</div>
-{% endfor %}
-</div>
-{% endfor %}
-
   <script>
     $(window).load(function(){
     $("#nav-budget_line_entries").addClass("current");
