@@ -58,6 +58,42 @@ class SubAccount(models.Model):
     def amount_remaining(self, user_preferences):
         return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
 
+    def debit_month(self, user_preferences, month, year):
+        tot = 0
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                    tot = tot + expense_budget_line.amount
+        return tot
+
+    def credit_month(self, user_preferences, month, year):
+        tot = 0
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    tot = tot + expense_budget_line.amount
+        return tot
+
+    def retrieve_breakdown(self, user_preferences, month, year):
+        text_block=''
+        num_chars_expense = 11
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
+                is_credit = False
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    is_credit = True
+                amount_string = dollar_format_local(expense_budget_line.amount, is_credit)
+                space_len = max(0,num_chars_expense-len(amount_string))
+                filler = space_len*' '
+                text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
+        return text_block
+
+
+
     def __unicode__(self):
         return self.abbrev
 
@@ -123,8 +159,6 @@ class BudgetLine(models.Model):
 
     def amount_remaining(self, user_preferences):
         return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
-
-
 
     def retrieve_breakdown(self, user_preferences, month, year):
         text_block=''

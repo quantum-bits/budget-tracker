@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style type="text/css">
+div.f1 { float: left; width: 250px; }
+div.f2 { float: left; text-align: right; width: 250px; }
+div.f3 { clear: both; }
+</style>
+
+<form action=""  method="post">
+  {% csrf_token %}
+
+<div class="content-center">
+<div>
+<select name="checked" id="option1">
+   <option value="checked_only">Checked Only</option>
+   <option value="all" {% if not user_preferences.view_checked_only %} selected {% endif %}>Checked & Other</option>
+ </select>
+</div>
+<div>
+<select name="encumbered" id="option2">
+   <option value="encumbered_only">Encumbered Only</option>
+   <option value="all" {% if not user_preferences.view_encumbrances_only %} selected {% endif %}>Encumbered & Other</option>
+ </select>
+</div>
+<div>
+<select name="future" id="option3">
+   <option value="future_only">Future Only</option>
+   <option value="all" {% if not user_preferences.view_future_only %} selected {% endif %}>Future & Other</option>
+ </select>
+</div>
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+
+<a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
+<p></p>
+
+</div>
+
+<h2> Subaccounts </h2>
+
+<div class="content-center">
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
+	<tr>
+	  <th colspan="5"> Summary (mouse-over for details)</th>
+	</tr>
+	<tr>
+	<td> <strong> Subaccount</strong> </td>
+	<td style="text-align: center;"> <strong>Budget</strong> </td>
+	<td style="text-align: center;"> <strong>Remaining</strong> </td>
+	{% for month in subaccount_data.month_name_list %}
+	<td style="text-align: center;"> <strong>{{month}}</strong> </td>
+	{% endfor %}
+	<td style="text-align: center;"> <strong> Total</strong> </td>
+	</thead>
+      </tr>
+      <tbody>
+	{% for row in subaccount_data.subaccount_list %}
+	<tr>
+	  <td> {{row.subaccount}} </td>
+	  <td style="text-align: right;">{{row.subaccount_available}}</td>
+	    {% if row.remaining_negative %}
+	       <td style="text-align: right; color: red"> {{row.subaccount_remaining}} </td>
+	    {% else %}
+	       <td style="text-align: right;"> {{row.subaccount_remaining}} </td>
+	    {% endif %}
+	    {% for entry in row.data_entries %}
+	      <td title="{{entry.breakdown}}"style="text-align: right;">{{entry.amount}}</td>
+	    {% endfor %}
+	    <td style="text-align: right;">{{row.total_debit_minus_credit}}</td>
+	</tr>
+	{% endfor %}
+	<tr>
+	  <td style="text-align: right;"> <strong>Totals</strong> </td>
+	  <td style="text-align: right;"> {{subaccount_data.budget_total}} </td>
+	    {% if subaccount_data.budget_remaining_is_negative %}
+	       <td style="text-align: right; color: red"> {{subaccount_data.budget_remaining}} </td>
+	    {% else %}
+	       <td style="text-align: right;"> {{subaccount_data.budget_remaining}} </td>
+	    {% endif %}
+	    {% for total in subaccount_data.subaccount_totals_list %}
+	      <td style="text-align: right;">{{total}}</td>
+	    {% endfor %}
+	    <td style="text-align: right;"> {{subaccount_data.all_subaccounts_credit_minus_debit}} </td>
+	</tr>
+
+	</tbody>
+      </table>
+</div>
+
+<div class="content-center">
+
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+
+<a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
+<p></p>
+
+</div>
+
+
+</form>
+
+  <script>
+    $(window).load(function(){
+    $("#nav-summary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Subaccount Summary</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+{% endblock %}

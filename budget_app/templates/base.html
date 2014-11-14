@@ -27,8 +27,17 @@
 	    <li id="nav-entries"><a href="{% url 'budget_app.views.budget_entries' %}">Budget Entries</a><i></i></li>
 	    <li id="nav-budget_line_entries"><a href="{% url 'budget_app.views.budget_line_entries' %}">Budget Lines</a><i></i></li>
 	    <li id="nav-subaccount_entries"><a href="{% url 'budget_app.views.subaccount_entries' %}">Subaccounts</a><i></i></li>
-	    <li id="nav-summary"><a href="{% url 'budget_app.views.summary' %}">Summary</a><i></i></li>
-<li id="nav-profile"><a href="{% url 'budget_app.views.display_notes' %}">Notes</a><i></i></li>
+	    <li id="nav-summary" class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                Summary
+                <b class="caret"></b>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href="{% url 'budget_app.views.budget_line_summary' %}">Budget Lines</a></li>
+		<li><a href="{% url 'budget_app.views.subaccount_summary' %}">Subaccounts</a></li>
+              </ul>
+            </li>
+	    <li id="nav-notes"><a href="{% url 'budget_app.views.display_notes' %}">Notes</a><i></i></li>
 	    {% if user.is_authenticated %}
 	      <li><a href="{% url 'logout' %}?next={% url 'login' %}">Logout</a><i></i></li>
 	    {% else %}

@@ -24,8 +24,6 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
-#fy.begin_on.strftime("%b") (gives 'Jun', for example)
-
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
 
@@ -36,8 +34,7 @@ def home(request):
 #    for django
 # 1. if is_split_transaction: put something on the budget_line_entries page and the subaccount page as a 
 #    warning if the person is about to check off the transaction...!
-# 2. on budget_line_entries and subaccount pages -- put totals in headings 
-#    for divs(?); compare to amount remaining in account
+
 
  
 @login_required
@@ -187,7 +184,7 @@ def subaccount_entries(request):
     return render(request, 'subaccount_entries.html', context)
 
 @login_required
-def summary(request):
+def subaccount_summary(request):
     user = request.user
 # assumes that users each have exactly ONE UserPreferences object
     user_preferences = user.user_preferences.all()[0]
@@ -197,9 +194,79 @@ def summary(request):
         process_preferences_and_checked_form(request, user_preferences)
 
     month_list = list_of_months_in_fy(fiscal_year)
-# now construct something that can be used as a key/column heading: 'Jun-14' or something; maybe that can be
-# done by the list_of_months_in_fy method
+    month_name_list = []
+    for month, year, year_name in month_list:
+        month_name_list.append(year_name)
 
+    subaccount_totals_list=[]
+    all_subaccounts_credit_minus_debit = 0
+    for month, year, year_name in month_list:
+        total_for_month = 0
+        for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
+            total_for_month = total_for_month + subaccount.credit_month(user_preferences, month, year)-subaccount.debit_month(user_preferences, month, year)
+        all_subaccounts_credit_minus_debit = all_subaccounts_credit_minus_debit + total_for_month
+        subaccount_totals_list.append(dollar_format_parentheses(total_for_month,True))
+
+    subaccount_list = []
+    all_subaccounts_total = 0
+    budget_total = 0
+    credit_minus_debit_total = 0
+
+    for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
+        data_entries = []
+        all_subaccounts_total = all_subaccounts_total+subaccount.amount_available
+        for month, year, year_name in month_list:
+            note = subaccount.retrieve_breakdown(user_preferences,month, year)
+            entry = subaccount.credit_month(user_preferences,month, year)-subaccount.debit_month(user_preferences,month, year)
+            data_entries.append({'amount': dollar_format_parentheses(entry,False), 'breakdown':note})
+#            department_total = department_total + entry
+            credit_minus_debit_total = credit_minus_debit_total + entry
+
+        total_subaccount = subaccount.total_credit(user_preferences)-subaccount.total_debit(user_preferences)
+        budget_remaining_subaccount = subaccount.amount_remaining(user_preferences)
+        budget_remaining_is_negative = False
+        if budget_remaining_subaccount < 0:
+            budget_remaining_is_negative = True
+        subaccount_list.append({'subaccount': subaccount,
+                                'data_entries': data_entries,
+                                'total_debit_minus_credit': dollar_format_parentheses(total_subaccount,True),
+                                'subaccount_available': dollar_format_parentheses(subaccount.amount_available,True),
+                                'subaccount_remaining': dollar_format_parentheses(budget_remaining_subaccount,True),
+                                'remaining_negative': budget_remaining_is_negative})
+
+    budget_remaining = all_subaccounts_total+credit_minus_debit_total
+    budget_remaining_is_negative = False
+    if budget_remaining < 0:
+        budget_remaining_is_negative = True
+    subaccount_data = {'subaccount_list': subaccount_list,
+                       'all_subaccounts_total': all_subaccounts_total,
+                       'month_name_list': month_name_list,
+                       'all_subaccounts_total': all_subaccounts_total,
+                       'budget_remaining_is_negative': budget_remaining_is_negative,
+                       'budget_remaining': dollar_format_parentheses(budget_remaining, True),
+                       'budget_total': all_subaccounts_total,
+                       'subaccount_totals_list': subaccount_totals_list,
+                       'all_subaccounts_credit_minus_debit':dollar_format_parentheses(all_subaccounts_credit_minus_debit, True)}
+
+    context = {
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': fiscal_year,
+        'subaccount_data': subaccount_data
+        }
+    return render(request, 'subaccount_summary.html', context)
+
+@login_required
+def budget_line_summary(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    if request.method == 'POST':
+        process_preferences_and_checked_form(request, user_preferences)
+
+    month_list = list_of_months_in_fy(fiscal_year)
     month_name_list = []
     for month, year, year_name in month_list:
         month_name_list.append(year_name)
@@ -253,7 +320,9 @@ def summary(request):
         'fiscal_year': fiscal_year,
         'department_list': department_list
         }
-    return render(request, 'summary.html', context)
+    return render(request, 'budget_line_summary.html', context)
+
+
 
 
 def list_of_months_in_fy(fy):
