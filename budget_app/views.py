@@ -71,11 +71,17 @@ def budget_entries(request):
                 expense_list.append(expense)
 #                print expense.abbrev_note()
 
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
     context = { 
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'expense_list': expense_list
+        'expense_list': expense_list,
+        'can_edit': can_edit
         }
     return render(request, 'budget_entries.html', context)
 
@@ -105,12 +111,16 @@ def credit_card_entries(request):
                                  'expense_list': expense_list})
 #    print credit_card_list
 
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
 
     context = {
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'credit_card_list': credit_card_list
+        'credit_card_list': credit_card_list,
+        'can_edit': can_edit
         }
 
     return render(request, 'credit_card_entries.html', context)
@@ -160,12 +170,18 @@ def budget_line_entries(request, id = None):
             unchecked_only = False
         else:
             unchecked_only = True
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
     context = {
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
         'department_list': department_list,
-        'unchecked_only': unchecked_only
+        'unchecked_only': unchecked_only,
+        'can_edit': can_edit
         }
     return render(request, 'budget_line_entries.html', context)
 
@@ -214,11 +230,16 @@ def subaccount_entries(request):
                                 'subaccount_available': dollar_format(subaccount.amount_available),
                                 'subaccount_remaining': dollar_format(subaccount.amount_remaining(user_preferences))})
 
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
     context = { 
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'subaccount_list': subaccount_list
+        'subaccount_list': subaccount_list,
+        'can_edit': can_edit
         }
     return render(request, 'subaccount_entries.html', context)
 
@@ -287,11 +308,16 @@ def subaccount_summary(request):
                        'subaccount_totals_list': subaccount_totals_list,
                        'all_subaccounts_credit_minus_debit':dollar_format_parentheses(all_subaccounts_credit_minus_debit, True)}
 
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
     context = {
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'subaccount_data': subaccount_data
+        'subaccount_data': subaccount_data,
+        'can_edit': can_edit
         }
     return render(request, 'subaccount_summary.html', context)
 
@@ -353,11 +379,16 @@ def budget_line_summary(request):
                                 'budget_remaining':dollar_format_parentheses(budget_remaining,True),
                                 'budget_remaining_is_negative': budget_remaining_is_negative})
 
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
     context = {
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'department_list': department_list
+        'department_list': department_list,
+        'can_edit': can_edit
         }
     return render(request, 'budget_line_summary.html', context)
 

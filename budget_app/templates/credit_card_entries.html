@@ -35,8 +35,10 @@ div.f3 { clear: both; }
 <p><input type="submit" alt="register" /></p>
 </div>
 
+{% if can_edit %}
 <a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
 <p></p>
+{% endif %}
 
 </div>
 <h2> Credit Card Holders</h2>
@@ -109,8 +111,10 @@ div.f3 { clear: both; }
 	      <td style="text-align: center;"> {% if expense.encumbered %} x {% endif %} </td>
 	      <td style="text-align: center;"> {% if expense.future_expense %} x {% endif %} </td>
 	      <td style="text-align: center;"> 
+		{% if can_edit %}
 		<a href="{% url 'new_budget_entry' expense.id %}?next={{ request.path|urlencode }}" >Edit</a>  | 
 		<a href="{% url 'delete_expense_confirmation' expense.id %}">Delete</a> </td>
+	        {% endif %}
 	    </tr>
 	    {% endfor %}
       </tbody>
@@ -130,8 +134,10 @@ div.f3 { clear: both; }
 <p><input type="submit" alt="register" /></p>
 </div>
 
+{% if can_edit %}
 <a href="{% url 'new_budget_entry' %}?next={{ request.path|urlencode }}"> New Budget Entry </a>
 <p></p>
+{% endif %}
 
 </div>
 
@@ -143,7 +149,7 @@ div.f3 { clear: both; }
   <script>
     $(window).load(function(){
     $("#nav-credit-card-entries").addClass("current");
-    $('.page-name').find('h1').replaceWith('<h1>Credit Card Entries</h1>');
+    $('.page-name').find('h1').replaceWith('<h1>Credit Card Entries ({{fiscal_year}})</h1>');
     $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
   </script>
 
