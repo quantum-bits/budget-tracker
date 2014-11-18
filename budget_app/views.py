@@ -79,6 +79,45 @@ def budget_entries(request):
         }
     return render(request, 'budget_entries.html', context)
 
+
+@login_required
+def credit_card_entries(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    
+    if request.method == 'POST':
+        process_preferences_and_checked_form(request, user_preferences)
+
+    credit_card_list = []
+    for credit_card in CreditCard.objects.all():
+        expense_list = []
+        for expense in credit_card.expense.all():
+            if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
+                if expense.include_expense(user_preferences):
+                    expense_list.append(expense)
+                    print expense
+                print expense_list
+#                print expense.abbrev_note()
+        credit_card_list.append({'credit_card': credit_card,
+                                 'expense_list': expense_list})
+    print credit_card_list
+
+
+    context = {
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': fiscal_year,
+        'credit_card_list': credit_card_list
+        }
+
+    return render(request, 'credit_card_entries.html', context)
+
+
+
+
 @login_required
 def budget_line_entries(request, id = None):
     user = request.user

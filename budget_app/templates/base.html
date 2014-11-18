@@ -37,6 +37,7 @@
 		<li><a href="{% url 'budget_app.views.subaccount_summary' %}">Subaccounts</a></li>
               </ul>
             </li>
+	    <li id="nav-credit-card-entries"><a href="{% url 'budget_app.views.credit_card_entries' %}">Credit Card Entries</a><i></i></li>
 	    <li id="nav-notes"><a href="{% url 'budget_app.views.display_notes' %}">Notes</a><i></i></li>
 	    {% if user.is_authenticated %}
 	      <li><a href="{% url 'logout' %}?next={% url 'login' %}">Logout</a><i></i></li>
