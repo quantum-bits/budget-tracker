@@ -98,12 +98,12 @@ def credit_card_entries(request):
             if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
                 if expense.include_expense(user_preferences):
                     expense_list.append(expense)
-                    print expense
-                print expense_list
+#                    print expense
+#                print expense_list
 #                print expense.abbrev_note()
         credit_card_list.append({'credit_card': credit_card,
                                  'expense_list': expense_list})
-    print credit_card_list
+#    print credit_card_list
 
 
     context = {

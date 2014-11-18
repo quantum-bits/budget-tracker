@@ -59,7 +59,7 @@ div.f3 { clear: both; }
     <table class="table table-striped table-bordered table-hover">
       <thead>
 	<tr>
-	  <th colspan="5"> Budget Line Entries for {{credit_card.credit_card}} </th>
+	  <th colspan="5"> Credit Card Entries for {{credit_card.credit_card}} </th>
 	</tr>
 <tr>
 	<td> Date </td>
@@ -116,81 +116,6 @@ div.f3 { clear: both; }
       </tbody>
     </table>
 
-
-
-<!--
-
-	<tr>
-	<td> Date </td>
-	<td> Description </td>
-	<td style="text-align: center;"> Subaccount </td>
-	<td style="text-align: center;"> Debit </td>
-	<td style="text-align: center;"> Credit </td>
-	<td style="text-align: center;"> Checked 
-	  {% if not user_preferences.view_checked_only %}
-	    {% if not unchecked_only %} <a href="{% url 'budget_line_entries' 1 %}"> [-] </a> 
-	    {% else %} <a href="{% url 'budget_line_entries' %}"> [+] </a> 
-	    {% endif %}
-	  {% endif %}
-	</td>
-	<td style="text-align: center;"> Encumbrance </td>
-	<td style="text-align: center;"> Future </td>
-	</thead>
-      <tbody>
-	    {% for ebl in credit_card.expense_budget_line_list %}
-	    {% if unchecked_only and ebl.expense.checked %}
-	    {% else %}
-	    <tr>
-	      <td> {{ebl.expense.date}} </td>
-	      <td> {{ebl.expense.description}}</td>
-	      <td> 
-	         {% if ebl.subaccount != None %} {{ ebl.subaccount }}{% endif %} 
-	      </td>
-	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
-	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
-	      {% else %}
-	        <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
-	      {% endif %}
-
-	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
-		{% else %}
-		<input type="checkbox" name="expense_check_flag" id="option{{ebl.expense.id}}" value={{ebl.expense.id}} />
-		{% endif %} </td>
-	      <td style="text-align: center;"> {% if ebl.expense.encumbered %} x {% endif %} </td>
-	      <td style="text-align: center;"> {% if ebl.expense.future_expense %} x {% endif %} </td>
-	    </tr>
-	    {% endif %}
-	    {% endfor %}
-	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Totals 
-	      {% if not user_preferences.view_checked_only %}
-	      {% if unchecked_only %} <strong style ="color: red">(may be innacurate, since only unchecked entries are being shown) </strong>
-	      {% endif %}
-	      {% endif %}
-	      </strong> </td>
-	      <td style="text-align: right;"> <strong>{{credit_card.total_debit}} </strong></td>
-	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
-	      <td></td>
-	      <td></td>
-	      <td></td>
-	    </tr>
-	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Budget </strong> </td> 
-	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_available}}</strong> </td>
-	      <td></td>
-	      <td></td>
-	      <td></td>
-	    </tr>
-	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Remaining </strong> </td> 
-	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_remaining}}</strong> </td>
-	      <td></td>
-	      <td></td>
-	      <td></td>
-	    </tr>	    
-      </tbody>
-    </table>
--->
  </div>
 
 </div>
@@ -214,23 +139,11 @@ div.f3 { clear: both; }
 </form>
 
 
-<!--
-<script>
-  $(function() {
-
-  $('#btn1').on('mouseover', function(){
-    $('#panel1').fadeToggle(1000);
-  });
-
-  });
-
-</script>
--->
 
   <script>
     $(window).load(function(){
     $("#nav-credit-card-entries").addClass("current");
-    $('.page-name').find('h1').replaceWith('<h1>Budget Entries</h1>');
+    $('.page-name').find('h1').replaceWith('<h1>Credit Card Entries</h1>');
     $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
   </script>
 
