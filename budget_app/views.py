@@ -149,17 +149,17 @@ def budget_line_entries(request, id = None):
                     ebl_list.append(expense_budget_line)
             total_debit_minus_credit = budget_line.total_debit(user_preferences)-budget_line.total_credit(user_preferences)
             if total_debit_minus_credit < 0:
-                d_m_c_string = "("+dollar_format(total_debit_minus_credit)+")"
+                d_m_c_string = " + "+dollar_format(-total_debit_minus_credit)
             else:
-                d_m_c_string = dollar_format(total_debit_minus_credit)
+                d_m_c_string = " - "+dollar_format(total_debit_minus_credit)
 
             budget_line_list.append({'budget_line': budget_line, 
                                      'expense_budget_line_list': ebl_list,
                                      'total_debit': dollar_format(budget_line.total_debit(user_preferences)),
                                      'total_credit': dollar_format(budget_line.total_credit(user_preferences)),
                                      'total_debit_minus_credit': d_m_c_string,
-                                     'budget_line_available': dollar_format(budget_line.amount_available),
-                                     'budget_line_remaining': dollar_format(budget_line.amount_remaining(user_preferences))})
+                                     'budget_line_available': dollar_format_parentheses(budget_line.amount_available, True),
+                                     'budget_line_remaining': dollar_format_parentheses(budget_line.amount_remaining(user_preferences), True)})
         department_list.append({'department': department,
                                 'budget_line_list': budget_line_list})
 
@@ -218,17 +218,17 @@ def subaccount_entries(request):
         
         total_debit_minus_credit = subaccount.total_debit(user_preferences)-subaccount.total_credit(user_preferences)
         if total_debit_minus_credit < 0:
-            d_m_c_string = "("+dollar_format(total_debit_minus_credit)+")"
+            d_m_c_string = " + "+dollar_format(-total_debit_minus_credit)
         else:
-            d_m_c_string = dollar_format(total_debit_minus_credit)
+            d_m_c_string = " - "+dollar_format(total_debit_minus_credit)
                 
         subaccount_list.append({'subaccount': subaccount, 
                                 'expense_budget_line_list': ebl_list,
                                 'total_debit': dollar_format(subaccount.total_debit(user_preferences)),
                                 'total_credit': dollar_format(subaccount.total_credit(user_preferences)),
                                 'total_debit_minus_credit': d_m_c_string,
-                                'subaccount_available': dollar_format(subaccount.amount_available),
-                                'subaccount_remaining': dollar_format(subaccount.amount_remaining(user_preferences))})
+                                'subaccount_available': dollar_format_parentheses(subaccount.amount_available, True),
+                                'subaccount_remaining': dollar_format_parentheses(subaccount.amount_remaining(user_preferences), True)})
 
     can_edit = False
     if user.is_superuser:

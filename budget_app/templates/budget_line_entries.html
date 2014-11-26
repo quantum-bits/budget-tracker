@@ -53,7 +53,7 @@ div.f3 { clear: both; }
 	   href="#{{row.budget_line.id}}">
 	 <div class="f1">{{row.budget_line}}</div>
 	 <div class="f2">
-	 {{row.budget_line_available}} - {{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
+	 {{row.budget_line_available}}{{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
 	 </a>
        </div>{# accordion-heading #}
 
@@ -99,7 +99,7 @@ div.f3 { clear: both; }
 	      {% endif %}
 
 	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
-		{% else %}
+		{% elif can_edit %}
 		<input type="checkbox" name="expense_check_flag" id="option{{ebl.expense.id}}" value={{ebl.expense.id}} />
 		{% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.encumbered %} x {% endif %} </td>

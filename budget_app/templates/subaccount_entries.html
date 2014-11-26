@@ -51,7 +51,7 @@ div.f3 { clear: both; }
 	   href="#{{row.subaccount.id}}">
 	 <div class="f1">{{row.subaccount.abbrev}}</div>
 	 <div class="f2">
-	   {{row.subaccount_available}} - {{row.total_debit_minus_credit}} = {{row.subaccount_remaining}}
+	   {{row.subaccount_available}}{{row.total_debit_minus_credit}} = {{row.subaccount_remaining}}
 	 </div><div class="f3"></div>
 	 
 	</a>
@@ -90,7 +90,7 @@ div.f3 { clear: both; }
 	        <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
 	      {% endif %}
 	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
-		{% else %}
+		{% elif can_edit %}
 		<input type="checkbox" name="expense_check_flag" id="option{{ebl.expense.id}}" value={{ebl.expense.id}} />
 		{% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.encumbered %} x {% endif %} </td>

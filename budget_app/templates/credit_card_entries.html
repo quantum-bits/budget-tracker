@@ -105,7 +105,7 @@ div.f3 { clear: both; }
 	      {% else %} <td></td>
 	      {% endif %}
 	      <td style="text-align: center;"> {% if expense.checked %} x 
-		{% else %}
+		{% elif can_edit %}
 		<input type="checkbox" name="expense_check_flag" id="option{{expense.id}}" value={{expense.id}} />
 		{% endif %} </td>
 	      <td style="text-align: center;"> {% if expense.encumbered %} x {% endif %} </td>
