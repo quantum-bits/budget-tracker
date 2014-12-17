@@ -3,7 +3,7 @@
 {% block content %}
 
 <style type="text/css">
-div.f1 { float: left; width: 150px; }
+div.f1 { float: left; width: 350px; }
 div.f2 { float: left; text-align: right; width: 250px; }
 div.f3 { clear: both; }
 </style>
@@ -49,7 +49,7 @@ div.f3 { clear: both; }
 	   data-toggle="collapse"
 	   data-parent="#year-accordion"
 	   href="#{{row.subaccount.id}}">
-	 <div class="f1">{{row.subaccount.abbrev}}</div>
+	 <div class="f1">{{row.subaccount}}</div>
 	 <div class="f2">
 	   {{row.subaccount_available}}{{row.total_debit_minus_credit}} = {{row.subaccount_remaining}}
 	 </div><div class="f3"></div>

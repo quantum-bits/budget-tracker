@@ -95,7 +95,10 @@ class SubAccount(models.Model):
 
 
     def __unicode__(self):
-        return self.abbrev
+        if self.abbrev == self.name:
+            return self.abbrev
+        else:
+            return self.abbrev+' ('+self.name+')'
 
     class Meta:
         ordering = [ 'abbrev' ]
