@@ -70,6 +70,7 @@ div.f3 { clear: both; }
 	<td> Date </td>
 	<td> Description </td>
 	<td style="text-align: center;"> Subaccount </td>
+	<td style="text-align: center;"> Split </td>
 	<td style="text-align: center;"> Debit </td>
 	<td style="text-align: center;"> Credit </td>
 	<td style="text-align: center;"> Checked 
@@ -81,6 +82,9 @@ div.f3 { clear: both; }
 	</td>
 	<td style="text-align: center;"> Encumbrance </td>
 	<td style="text-align: center;"> Future </td>
+	{% if can_edit %}
+	<td style="text-align: center;"> Edit/Delete </td>
+	{% endif %}
 	</thead>
       <tbody>
 	    {% for ebl in row.expense_budget_line_list %}
@@ -92,23 +96,33 @@ div.f3 { clear: both; }
 	      <td> 
 	         {% if ebl.subaccount != None %} {{ ebl.subaccount }}{% endif %} 
 	      </td>
+	      <td style="text-align: center;"> 
+		{% if ebl.expense.is_split_transaction %}
+		   Split: {{ebl.expense.total_credit_minus_debit_string}}
+		{% endif %}
+	      </td>
 	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
 	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
 	      {% else %}
 	        <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
 	      {% endif %}
-
 	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
 		{% elif can_edit %}
 		<input type="checkbox" name="expense_check_flag" id="option{{ebl.expense.id}}" value={{ebl.expense.id}} />
 		{% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.encumbered %} x {% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.future_expense %} x {% endif %} </td>
+		{% if can_edit %}
+	      <td style="text-align: center;"> 
+		<a href="{% url 'new_budget_entry' ebl.expense.id %}?next={{ request.path|urlencode }}" >Edit</a>  | 
+		<a href="{% url 'delete_expense_confirmation' ebl.expense.id %}">Delete</a> 
+		</td>
+	      {% endif %}
 	    </tr>
 	    {% endif %}
 	    {% endfor %}
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Totals 
+	      <td colspan="4" style="text-align: right;"> <strong>Totals 
 	      {% if not user_preferences.view_checked_only %}
 	      {% if unchecked_only %} <strong style ="color: red">(may be innacurate, since only unchecked entries are being shown) </strong>
 	      {% endif %}
@@ -119,20 +133,23 @@ div.f3 { clear: both; }
 	      <td></td>
 	      <td></td>
 	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Budget </strong> </td> 
+	      <td colspan="4" style="text-align: right;"> <strong>Budget </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_available}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Remaining </strong> </td> 
+	      <td colspan="4" style="text-align: right;"> <strong>Remaining </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>	    
       </tbody>
     </table>

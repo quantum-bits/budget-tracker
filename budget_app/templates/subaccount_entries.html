@@ -70,11 +70,15 @@ div.f3 { clear: both; }
 	<td> Date </td>
 	<td> Description </td>
 	<td style="text-align: center;"> Budget Line </td>
+	<td style="text-align: center;"> Split </td>
 	<td style="text-align: center;"> Debit </td>
 	<td style="text-align: center;"> Credit </td>
 	<td style="text-align: center;"> Checked </td>
 	<td style="text-align: center;"> Encumbrance </td>
 	<td style="text-align: center;"> Future </td>
+	{% if can_edit %}
+	<td style="text-align: center;"> Edit/Delete </td>
+	{% endif %}
 	</thead>
       <tbody>
 	    {% for ebl in row.expense_budget_line_list %}
@@ -83,6 +87,11 @@ div.f3 { clear: both; }
 	      <td> {{ebl.expense.description}}</td>
 	      <td> 
 	         {{ ebl.budget_line.code }}
+	      </td>
+	      <td style="text-align: center;"> 
+		{% if ebl.expense.is_split_transaction %}
+		   Split: {{ebl.expense.total_credit_minus_debit_string}}
+		{% endif %}
 	      </td>
 	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
 	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
@@ -95,29 +104,38 @@ div.f3 { clear: both; }
 		{% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.encumbered %} x {% endif %} </td>
 	      <td style="text-align: center;"> {% if ebl.expense.future_expense %} x {% endif %} </td>
+	      {% if can_edit %}
+	      <td style="text-align: center;">
+		<a href="{% url 'new_budget_entry' ebl.expense.id %}?next={{ request.path|urlencode }}" >Edit</a>  | 
+		<a href="{% url 'delete_expense_confirmation' ebl.expense.id %}">Delete</a> 
+		</td>
+	      {% endif %} 
 	    </tr>
 	    {% endfor %}
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Totals </strong> </td> 
+	      <td colspan="4" style="text-align: right;"> <strong>Totals </strong> </td> 
 	      <td style="text-align: right;"> <strong>{{row.total_debit}} </strong></td>
 	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Budget </strong> </td> 
+	      <td colspan="4" style="text-align: right;"> <strong>Budget </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.subaccount_available}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="3" style="text-align: right;"> <strong>Remaining </strong> </td> 
+	      <td colspan="4" style="text-align: right;"> <strong>Remaining </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.subaccount_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>	    
       </tbody>
     </table>

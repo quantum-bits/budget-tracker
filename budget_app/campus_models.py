@@ -263,6 +263,13 @@ class Expense(models.Model):
         else:
             return False
 
+    def total_credit_minus_debit_string(self):
+        c_m_d = self.total_credit()-self.total_debit()
+        if c_m_d >= 0:
+            return "{0:.2f}".format(c_m_d)
+        else:
+            return "({0:.2f})".format(-c_m_d)
+
     def is_split_transaction(self):
         number_of_ebls = 0
         for expense_budget_line in self.expense_budget_line.all():
