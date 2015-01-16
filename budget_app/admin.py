@@ -15,13 +15,26 @@ class ExpenseAdmin(admin.ModelAdmin):
         ExpenseBudgetLineInline,
         ]
 
+class AccountOwnerAdmin(admin.ModelAdmin):
+    list_display = ('subaccount','department_member','fraction',)
+
+class AccountOwnerInline(admin.TabularInline):
+    model = AccountOwner
+
+class SubAccountAdmin(admin.ModelAdmin):
+    inlines = [
+        AccountOwnerInline,
+        ]
+    list_display = ('name','amount_available','fiscal_year',)
+
 admin.site.register(FiscalYear)
 admin.site.register(Note, NoteAdmin)
 admin.site.register(DepartmentMember)
 admin.site.register(UserPreferences, UserPreferencesAdmin)
 admin.site.register(BudgetLine)
 admin.site.register(Expense, ExpenseAdmin)
-admin.site.register(SubAccount)
+admin.site.register(SubAccount, SubAccountAdmin)
 admin.site.register(CreditCard)
 admin.site.register(ExpenseBudgetLine)
 admin.site.register(Department)
+admin.site.register(AccountOwner, AccountOwnerAdmin)

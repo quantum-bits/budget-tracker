@@ -33,11 +33,31 @@ class FiscalYear(models.Model):
     def __unicode__(self):
         return '{0}-{1}'.format(self.begin_on.year, self.end_on.year)
 
+
+class DepartmentMember(Person):
+    RANK_CHOICES = (('Inst', 'Instructor'),
+                    ('Adj', 'Adjunct Professor'),
+                    ('Asst', 'Assistant Professor'),
+                    ('Assoc', 'Associate Professor'),
+                    ('Full', 'Professor'),
+                    ('Staff','Staff'))
+#    faculty_id = models.CharField(max_length=25)
+#    department = models.ForeignKey(Department, related_name='faculty')
+    position = models.CharField(max_length=8, choices=RANK_CHOICES)
+
+    class Meta:
+        ordering = ['last_name','first_name']
+
+
+
 class SubAccount(models.Model):
     name = models.CharField(max_length=40)
     abbrev = models.CharField(max_length=30)
     amount_available = models.DecimalField(max_digits = 10, decimal_places=2)
     fiscal_year = models.ForeignKey(FiscalYear, related_name = 'subaccounts')
+    owned_by = models.ManyToManyField(DepartmentMember, through='AccountOwner',
+                                      blank=True, null=True,
+                                      related_name = 'subaccounts')
 
     def total_debit(self, user_preferences):
         tot = 0
@@ -91,7 +111,6 @@ class SubAccount(models.Model):
                 filler = space_len*' '
                 text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
         return text_block
-
 
 
     def __unicode__(self):
@@ -188,22 +207,18 @@ def dollar_format_local(amount,is_credit):
     else:
         return "({0:.2f})".format(amount)
 
-class DepartmentMember(Person):
-    RANK_CHOICES = (('Inst', 'Instructor'),
-                    ('Adj', 'Adjunct Professor'),
-                    ('Asst', 'Assistant Professor'),
-                    ('Assoc', 'Associate Professor'),
-                    ('Full', 'Professor'),
-                    ('Staff','Staff'))
-#    faculty_id = models.CharField(max_length=25)
-#    department = models.ForeignKey(Department, related_name='faculty')
-    position = models.CharField(max_length=8, choices=RANK_CHOICES)
-
+class AccountOwner(models.Model):
+    """
+    Relate a subaccount to one (of the possibly many) department members
+    who 'own' this subaccount.  The primary purpose of this model is to 
+    track how much of the subaccount is owned by the department member.
+    """
+    subaccount = models.ForeignKey(SubAccount, related_name = 'account_owners')
+    department_member = models.ForeignKey(DepartmentMember, related_name = 'account_owners')
+    fraction = models.FloatField(validators = [MinValueValidator(0.0), MaxValueValidator(1.0)])
+    
     class Meta:
-        ordering = ['last_name','first_name']
-
-
-
+        ordering = [ 'subaccount' ]
 
 class CreditCard(models.Model):
     person = models.ForeignKey(DepartmentMember, related_name='credit_card')

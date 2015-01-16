@@ -24,6 +24,15 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
+# 0. add a session variable that keeps track of the sending page; need this for the
+#    delete button so that can return to the correct page
+# 0a. add a tooltip to the "split" column, showing the details of split transactions
+# 1. add session variable to keep track of open/closed divs, like in iChair
+# 2. add 'owners' to subaccounts, and then display how much people have
+#    left in all of their subaccounts
+#     >> put that summary at the bottom of the subaccounts page (?)
+#     >> allow subaccts to have several 'owners', w/ diffpercentages/amounts (?)
+
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
 
@@ -32,8 +41,7 @@ def home(request):
 # NEXT:
 # 0. new_budget_entry: look up how to do custom "cleaned data"...probably in the views documentation
 #    for django
-# 1. if is_split_transaction: put something on the budget_line_entries page and the subaccount page as a 
-#    warning if the person is about to check off the transaction...!
+
 
 
  
