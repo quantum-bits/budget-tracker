@@ -51,6 +51,7 @@ div.f3 { clear: both; }
 	</tr>
 	<tr>
 	<td> <strong> Subaccount</strong> </td>
+	<td style="text-align: center;"> <strong>Owner(s)</strong> </td>
 	<td style="text-align: center;"> <strong>Budget</strong> </td>
 	<td style="text-align: center;"> <strong>Remaining</strong> </td>
 	{% for month in subaccount_data.month_name_list %}
@@ -63,6 +64,11 @@ div.f3 { clear: both; }
 	{% for row in subaccount_data.subaccount_list %}
 	<tr>
 	  <td> {{row.subaccount}} </td>
+	  <td style="text-align: center;">
+	    {% for owner in row.owned_by %}
+	       <div>{{owner}}</div>
+	    {% endfor %}
+	  </td>
 	  <td style="text-align: right;">{{row.subaccount_available}}</td>
 	    {% if row.remaining_negative %}
 	       <td style="text-align: right; color: red"> {{row.subaccount_remaining}} </td>

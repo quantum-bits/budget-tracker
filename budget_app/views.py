@@ -281,6 +281,9 @@ def subaccount_summary(request):
     credit_minus_debit_total = 0
 
     for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
+        owned_by = []
+        for account_owner in subaccount.account_owners.all():
+            owned_by.append(account_owner.department_member.last_name+" ({0:.0f}%)".format(account_owner.fraction*100))
         data_entries = []
         all_subaccounts_total = all_subaccounts_total+subaccount.amount_available
         for month, year, year_name in month_list:
@@ -296,6 +299,7 @@ def subaccount_summary(request):
         if budget_remaining_subaccount < 0:
             budget_remaining_is_negative = True
         subaccount_list.append({'subaccount': subaccount,
+                                'owned_by': owned_by,
                                 'data_entries': data_entries,
                                 'total_debit_minus_credit': dollar_format_parentheses(total_subaccount,True),
                                 'subaccount_available': dollar_format_parentheses(subaccount.amount_available,True),
@@ -399,6 +403,49 @@ def budget_line_summary(request):
         'can_edit': can_edit
         }
     return render(request, 'budget_line_summary.html', context)
+
+
+
+@login_required
+def owner_summary(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    if request.method == 'POST':
+        process_preferences_and_checked_form(request, user_preferences)
+
+    data_list = []
+    for department_member in DepartmentMember.objects.all():
+        summary_list, total, total_is_negative = department_member.subaccount_totals_summary(user_preferences)
+        data_list.append({
+                'department_member': department_member,
+                'subaccount_summary': summary_list, 
+                'total': total, 
+                'total_is_negative': total_is_negative
+                })
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
+    context = { 
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': fiscal_year,
+        'can_edit': can_edit,
+        'data_list': data_list
+        }
+    return render(request, 'owner_summary.html', context)
+
+
+
+
+
+
+
+
 
 
 

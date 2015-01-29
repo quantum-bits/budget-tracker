@@ -4,6 +4,7 @@ from itertools import chain
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
 from django.db.models import Q
+from decimal import *
 
 # user.is_superuser can be used to signal that someone can mess with the
 # budget....  (it's boolean)
@@ -44,6 +45,40 @@ class DepartmentMember(Person):
 #    faculty_id = models.CharField(max_length=25)
 #    department = models.ForeignKey(Department, related_name='faculty')
     position = models.CharField(max_length=8, choices=RANK_CHOICES)
+
+    def dollar_format_parentheses(self, amount, include_zero):
+        if amount>0:
+            return "{0:.2f}".format(amount)
+        elif amount<0:
+            return "({0:.2f})".format(-amount)
+        elif amount==0 and include_zero:
+            return '0.00'
+        else:
+            return ''
+
+    def subaccount_totals_summary(self, user_preferences):
+        subaccount_summary_list = []
+        total_share_remaining = 0
+        for subaccount in self.subaccounts.filter(fiscal_year = user_preferences.fiscal_year_to_view):
+            account_owner = subaccount.account_owners.filter(department_member=self)[0]
+            remaining = subaccount.amount_remaining(user_preferences)
+            amount_remaining_is_negative = False
+            if remaining < 0:
+                amount_remaining_is_negative = True
+            subaccount_summary_list.append({
+                    'subaccount': subaccount, 
+                    'fraction': "{0:.0f}%".format(100*account_owner.fraction),
+                    'available': self.dollar_format_parentheses(subaccount.amount_available, True),
+                    'available_share': self.dollar_format_parentheses(subaccount.amount_available*Decimal(str(account_owner.fraction)), True),
+                    'amount_remaining': self.dollar_format_parentheses(remaining,True),
+                    'amount_remaining_share': self.dollar_format_parentheses(subaccount.amount_remaining(user_preferences)*Decimal(str(account_owner.fraction)), True),
+                    'amount_remaining_is_negative': amount_remaining_is_negative
+                    })
+            total_share_remaining = total_share_remaining + subaccount.amount_remaining(user_preferences)*Decimal(str(account_owner.fraction))
+        total_is_negative = False
+        if total_share_remaining < 0:
+            total_is_negative = True
+        return subaccount_summary_list, self.dollar_format_parentheses(total_share_remaining, True),total_is_negative
 
     class Meta:
         ordering = ['last_name','first_name']
