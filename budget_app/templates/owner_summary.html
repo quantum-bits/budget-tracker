@@ -68,18 +68,18 @@ div.f3 { clear: both; }
 	</tr>
 	<tr>
 	<td> Subaccount </td>
-	<td style="text-align: center;"> Share</td>
-	<td style="text-align: center;"> Budget</td>
+	<td style="text-align: center;"> Total Budget</td>
 	<td style="text-align: center;"> Amount Remaining </td>
+	<td style="text-align: center;"> Share</td>
 	<td style="text-align: center;"> Share of Amount Remaining</td>
 	</thead>
       <tbody>
 	    {% for subaccount in owner.subaccount_summary %}
 	    <tr>
 	      <td style="text-align: left;"> {{subaccount.subaccount}}</td>
-	      <td style="text-align: center;"> {{subaccount.fraction}}</td>
 	      <td style="text-align: center;"> {{subaccount.available}}</td>
 	      <td style="text-align: center;"> {{subaccount.amount_remaining}}</td>
+	      <td style="text-align: center;"> {{subaccount.fraction}}</td>
 	      <td style="text-align: center;"> {{subaccount.amount_remaining_share}}</td>
 	    </tr>
 	    {% endfor %}
