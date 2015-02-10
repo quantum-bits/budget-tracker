@@ -329,6 +329,29 @@ class Expense(models.Model):
         else:
             return False
 
+    def retrieve_split(self):
+        text_block=''
+        num_chars_expense = 11
+        for expense_budget_line in self.expense_budget_line.all():
+            date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
+            is_credit = False
+            if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                is_credit = True
+            amount_string = dollar_format_local(expense_budget_line.amount, is_credit)
+            space_len = max(0,num_chars_expense-len(amount_string))
+            filler = space_len*' '
+#            text_block=text_block+amount_string+filler+expense_budget_line.budget_line.name+' ('+expense_budget_line.budget_line.code+') '
+            if expense_budget_line.subaccount:
+                text_block = text_block+amount_string+filler+expense_budget_line.budget_line.name+' ('+expense_budget_line.budget_line.code+') - '
+                if expense_budget_line.subaccount.abbrev == expense_budget_line.subaccount.name:
+                    text_block = text_block+expense_budget_line.subaccount.abbrev+'\n'
+                else:
+                    text_block = text_block+expense_budget_line.subaccount.abbrev+' ('+expense_budget_line.subaccount.name+')'+'\n'
+            else:
+                text_block = text_block+amount_string+filler+expense_budget_line.budget_line.name+' ('+expense_budget_line.budget_line.code+') '+'\n'
+        return text_block
+
+
     def __unicode__(self):
         return '{0}'.format(self.description)
 

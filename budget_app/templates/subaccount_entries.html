@@ -46,9 +46,10 @@ div.f3 { clear: both; }
    <div class="accordion-group">
      <div class="accordion-heading">
        <a class="accordion-toggle"
-	   data-toggle="collapse"
-	   data-parent="#year-accordion"
-	   href="#{{row.subaccount.id}}">
+	  data-toggle="collapse"
+	  data-parent="#year-accordion"
+	  href="#{{row.subaccount.id}}"
+	  onclick="divRegister({{row.subaccount.id}})">
 	 <div class="f1">{{row.subaccount}}</div>
 	 <div class="f2">
 	   {{row.subaccount_available}}{{row.total_debit_minus_credit}} = {{row.subaccount_remaining}}
@@ -160,8 +161,41 @@ div.f3 { clear: both; }
 
 </div>
 
+<script>
+function divRegister(id)
+{
+var xmlhttp;
+if (window.XMLHttpRequest)
+  {// code for IE7+, Firefox, Chrome, Opera, Safari
+  xmlhttp=new XMLHttpRequest();
+  }
+else
+  {// code for IE6, IE5
+  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+xmlhttp.onreadystatechange=function()
+  {
+  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+    {
+    /*document.getElementById("myDiv").innerHTML=xmlhttp.responseText;*/
+    }
+  }
+xmlhttp.open("GET","/budget_app/divtracker/1/"+id+"/",true);
+xmlhttp.send();
+}
+</script>
+
 
 </form>
+
+<script>
+    $(window).load(function(){
+    var id_list = {{open_div_id_list|safe}};
+    for (var n=0; n < id_list.length; n++) {
+      $('#'+id_list[n]).collapse("show");
+    }		      
+    });
+</script>
 
   <script>
     $(window).load(function(){

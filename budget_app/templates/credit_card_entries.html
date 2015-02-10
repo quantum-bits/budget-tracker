@@ -47,9 +47,10 @@ div.f3 { clear: both; }
    <div class="accordion-group">
      <div class="accordion-heading">
        <a class="accordion-toggle"
-	   data-toggle="collapse"
-	   data-parent="#year-accordion"
-	   href="#{{credit_card.credit_card.id}}">
+	  data-toggle="collapse"
+	  data-parent="#year-accordion"
+	  href="#{{credit_card.credit_card.id}}"
+	  onclick="divRegister({{credit_card.credit_card.id}})">
 	 {{credit_card.credit_card}}
 	 </a>
        </div>{# accordion-heading #}
@@ -141,10 +142,41 @@ div.f3 { clear: both; }
 
 </div>
 
+<script>
+function divRegister(id)
+{
+var xmlhttp;
+if (window.XMLHttpRequest)
+  {// code for IE7+, Firefox, Chrome, Opera, Safari
+  xmlhttp=new XMLHttpRequest();
+  }
+else
+  {// code for IE6, IE5
+  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+xmlhttp.onreadystatechange=function()
+  {
+  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+    {
+    /*document.getElementById("myDiv").innerHTML=xmlhttp.responseText;*/
+    }
+  }
+xmlhttp.open("GET","/budget_app/divtracker/2/"+id+"/",true);
+xmlhttp.send();
+}
+</script>
+
 
 </form>
 
-
+<script>
+    $(window).load(function(){
+    var id_list = {{open_div_id_list|safe}};
+    for (var n=0; n < id_list.length; n++) {
+      $('#'+id_list[n]).collapse("show");
+    }		      
+    });
+</script>
 
   <script>
     $(window).load(function(){

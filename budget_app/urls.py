@@ -25,5 +25,6 @@ urlpatterns = patterns(
     url(r'^addnote/', 'add_new_note', name='add_new_note'),
     url(r'^updateNote/(\d+)/$', 'update_note', name='update_note'),
     url(r'^deleteNote/(\d+)/$', 'delete_note', name='delete_note'),
+    url(r'^divtracker/(\d+)/(\d+)/$','open_close_div_tracker', name='open_close_div_tracker'),
 
 )

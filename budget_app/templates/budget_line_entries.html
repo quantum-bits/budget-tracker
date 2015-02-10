@@ -43,14 +43,15 @@ div.f3 { clear: both; }
 
 {% for department in department_list %}
 <h2> {{ department.department }}</h2>
- <div id="year-accordion" class="accordion">
+ <div id="year-accordion-{{department.department.id}}" class="accordion">
 {% for row in department.budget_line_list %}
    <div class="accordion-group">
      <div class="accordion-heading">
        <a class="accordion-toggle"
-	   data-toggle="collapse"
-	   data-parent="#year-accordion"
-	   href="#{{row.budget_line.id}}">
+	  data-toggle="collapse"
+	  data-parent="#year-accordion-{{department.department.id}}"
+	  href="#{{row.budget_line.id}}"
+	  onclick="divRegister({{row.budget_line.id}})">
 	 <div class="f1">{{row.budget_line}}</div>
 	 <div class="f2">
 	 {{row.budget_line_available}}{{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
@@ -96,11 +97,13 @@ div.f3 { clear: both; }
 	      <td> 
 	         {% if ebl.subaccount != None %} {{ ebl.subaccount }}{% endif %} 
 	      </td>
-	      <td style="text-align: center;"> 
-		{% if ebl.expense.is_split_transaction %}
+	      {% if ebl.expense.is_split_transaction %}
+	         <td title="{{ebl.expense.retrieve_split}}" style="text-align: center;"> 
 		   Split: {{ebl.expense.total_credit_minus_debit_string}}
-		{% endif %}
-	      </td>
+		 </td>
+	      {% else %}
+		 <td></td>
+              {% endif %}
 	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
 	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
 	      {% else %}
@@ -176,7 +179,45 @@ div.f3 { clear: both; }
 </div>
 
 
+<!-- the following is some AJAX that keeps track of which divs are open and which are shut -->
+
+<script>
+function divRegister(id)
+{
+var xmlhttp;
+if (window.XMLHttpRequest)
+  {// code for IE7+, Firefox, Chrome, Opera, Safari
+  xmlhttp=new XMLHttpRequest();
+  }
+else
+  {// code for IE6, IE5
+  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  }
+xmlhttp.onreadystatechange=function()
+  {
+  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+    {
+    /*document.getElementById("myDiv").innerHTML=xmlhttp.responseText;*/
+    }
+  }
+xmlhttp.open("GET","/budget_app/divtracker/0/"+id+"/",true);
+xmlhttp.send();
+}
+</script>
+
 </form>
+
+<script>
+    $(window).load(function(){
+    var id_list = {{open_div_id_list|safe}};
+    for (var n=0; n < id_list.length; n++) {
+      $('#'+id_list[n]).collapse("show");
+    }		      
+    });
+</script>
+
+
+
   <script>
     $(window).load(function(){
     $("#nav-budget_line_entries").addClass("current");

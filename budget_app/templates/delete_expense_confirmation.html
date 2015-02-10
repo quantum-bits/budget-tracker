@@ -5,7 +5,7 @@
 
 <p> Are you sure that you want to <b> delete </b> the following expense? 
 This action is not reversible.</p> 
-<p> <b> {{expense}} </b> (<a href="{% url 'budget_entries' %}">No! It's all been a terrible mistake!</a>)</p>
+<p> <b> {{expense}} </b> (<a href="{{sending_page}}">No! It's all been a terrible mistake!</a>)</p>
 <p> <a href="{% url 'delete_expense' expense.id %}">Delete</a> </p>
 
    <script>

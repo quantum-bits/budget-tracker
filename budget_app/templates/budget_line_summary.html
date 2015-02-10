@@ -71,7 +71,7 @@ div.f3 { clear: both; }
 	       <td style="text-align: right;"> {{row.budget_line_remaining}} </td>
 	    {% endif %}
 	    {% for entry in row.data_entries %}
-	      <td title="{{entry.breakdown}}"style="text-align: right;">{{entry.amount}}</td>
+	      <td title="{{entry.breakdown}}" style="text-align: right;">{{entry.amount}}</td>
 	    {% endfor %}
 	    <td style="text-align: right;">{{row.total_debit_minus_credit}}</td>
 	</tr>

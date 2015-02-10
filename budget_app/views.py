@@ -24,15 +24,6 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
-# 0. add a session variable that keeps track of the sending page; need this for the
-#    delete button so that can return to the correct page
-# 0a. add a tooltip to the "split" column, showing the details of split transactions
-# 1. add session variable to keep track of open/closed divs, like in iChair
-# 2. add 'owners' to subaccounts, and then display how much people have
-#    left in all of their subaccounts
-#     >> put that summary at the bottom of the subaccounts page (?)
-#     >> allow subaccts to have several 'owners', w/ diffpercentages/amounts (?)
-
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
 
@@ -69,6 +60,8 @@ def budget_entries(request):
     user_preferences = user.user_preferences.all()[0]
     fiscal_year = user_preferences.fiscal_year_to_view
 
+    request.session["return_to_page"] = "/budget_app/budgetentries/"
+
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
 
@@ -101,6 +94,7 @@ def credit_card_entries(request):
     user_preferences = user.user_preferences.all()[0]
     fiscal_year = user_preferences.fiscal_year_to_view
 
+    request.session["return_to_page"] = "/budget_app/credit_card_entries/"
     
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
@@ -130,6 +124,8 @@ def credit_card_entries(request):
         'credit_card_list': credit_card_list,
         'can_edit': can_edit
         }
+    json_open_div_id_list = construct_json_open_div_id_list(request, 2)
+    context['open_div_id_list']=json_open_div_id_list
 
     return render(request, 'credit_card_entries.html', context)
 
@@ -143,6 +139,7 @@ def budget_line_entries(request, id = None):
     user_preferences = user.user_preferences.all()[0]
     fiscal_year = user_preferences.fiscal_year_to_view
 
+    request.session["return_to_page"] = "/budget_app/budgetlineentries/"
     
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
@@ -191,6 +188,10 @@ def budget_line_entries(request, id = None):
         'unchecked_only': unchecked_only,
         'can_edit': can_edit
         }
+
+    json_open_div_id_list = construct_json_open_div_id_list(request, 0)
+    context['open_div_id_list']=json_open_div_id_list
+
     return render(request, 'budget_line_entries.html', context)
 
 
@@ -213,6 +214,8 @@ def subaccount_entries(request):
 # assumes that users each have exactly ONE UserPreferences object
     user_preferences = user.user_preferences.all()[0]
     fiscal_year = user_preferences.fiscal_year_to_view
+
+    request.session["return_to_page"] = "/budget_app/subaccountentries/"
 
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
@@ -249,6 +252,9 @@ def subaccount_entries(request):
         'subaccount_list': subaccount_list,
         'can_edit': can_edit
         }
+    json_open_div_id_list = construct_json_open_div_id_list(request, 1)
+    context['open_div_id_list']=json_open_div_id_list
+
     return render(request, 'subaccount_entries.html', context)
 
 @login_required
@@ -586,7 +592,12 @@ def process_preferences_and_checked_form(request, user_preferences):
 @login_required
 def delete_expense_confirmation(request, id):
     expense = Expense.objects.get(pk = id)
-    context ={'expense': expense}
+    if "return_to_page" in request.session:
+        sending_page = request.session["return_to_page"]
+    else:
+        sending_page = "home"
+
+    context ={'expense': expense, 'sending_page': sending_page}
     return render(request, 'delete_expense_confirmation.html', context)
 
 @login_required
@@ -594,7 +605,13 @@ def delete_expense(request, id):
     instance = Expense.objects.get(pk = id)
 
     instance.delete()
-    return redirect('budget_entries')
+
+    if "return_to_page" in request.session:
+        next = request.session["return_to_page"]
+    else:
+        next = "home"
+
+    return redirect(next)
 
 
 @login_required
@@ -703,4 +720,152 @@ def delete_note(request, id):
 
     instance.delete()
     return redirect('display_notes')
+
+@login_required
+def open_close_div_tracker(request,sending_page,id):
+    """
+    called by ajax; tracks which divs should be open and closed on the sending page
+    """
+# sending_page: 
+#  0: budget_line_entries
+#  1: subaccount_entries
+#  2: credit_card_entries
+
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    if int(sending_page) == 0:
+        base_key = "budget_line_entries-"
+        incoming_budget_line = BudgetLine.objects.get(pk=int(id))
+        for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=incoming_budget_line.department.id)):
+            key = base_key+str(budget_line.id)
+            if budget_line.id == int(id): # this is the one that just got clicked
+                if key in request.session:
+                    if request.session[key] == 'closed':
+                        request.session[key] = 'open'
+                    else:
+                        request.session[key] = 'closed'
+                else:
+                    request.session[key] = 'open'
+            else:
+                request.session[key] = 'closed'
+    elif int(sending_page) == 1:
+        base_key = "subaccount_entries-"
+        for subaccount in SubAccount.objects.filter(Q(fiscal_year__id=fiscal_year.id)):
+            key = base_key+str(subaccount.id)
+            if subaccount.id == int(id): # this is the one that just got clicked
+                if key in request.session:
+                    if request.session[key] == 'closed':
+                        request.session[key] = 'open'
+                    else:
+                        request.session[key] = 'closed'
+                else:
+                    request.session[key] = 'open'
+            else:
+                request.session[key] = 'closed'
+    elif int(sending_page) == 2:
+        base_key = "credit_card_entries-"
+        for credit_card in CreditCard.objects.all():
+            key = base_key+str(credit_card.id)
+            if credit_card.id == int(id): # this is the one that just got clicked
+                if key in request.session:
+                    if request.session[key] == 'closed':
+                        request.session[key] = 'open'
+                    else:
+                        request.session[key] = 'closed'
+                else:
+                    request.session[key] = 'open'
+            else:
+                request.session[key] = 'closed'
+
+#    print "list of keys:"
+#    for key in request.session.keys():
+#        print key, request.session[key]
+    return_string = ""
+
+    return HttpResponse(return_string)
+
+def construct_json_open_div_id_list(request, sending_page):
+    """
+    constructs a json-formatted list of ids for the divs that should be open upon loading a given page
+    """
+# sending_page: 
+#  0: budget_line_entries
+#  1: subaccount_entries
+#  2: credit_card_entries
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    open_div_list = []
+    if int(sending_page) == 0:
+        base_key = "budget_line_entries-"
+        close_all_ids = False
+        for department in Department.objects.all():
+            all_ids_this_dept_closed = True
+            for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=department.id)):
+                key = base_key+str(budget_line.id)
+                if key in request.session:
+                    if request.session[key]=='open':
+                        if all_ids_this_dept_closed == False: #apparently there are more than one div within a given department that are marked as open; oops! close them all
+                            close_all_ids = True
+                        else:
+                            all_ids_this_dept_closed = False
+                            open_div_list.append(budget_line.id)
+        
+        if close_all_ids: # there has been an irregularity; close all the divs; reset the session variables, too
+            open_div_list = []
+            for department in Department.objects.all():
+                for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=department.id)):
+                    key = base_key+str(budget_line.id)
+                    request.session[key]='closed'
+
+    elif int(sending_page) == 1:
+        base_key = "subaccount_entries-"
+        close_all_ids = False
+        all_ids_closed = True
+        for subaccount in SubAccount.objects.filter(Q(fiscal_year__id=fiscal_year.id)):
+            key = base_key+str(subaccount.id)
+            if key in request.session:
+                if request.session[key]=='open':
+                    if all_ids_closed == False: #apparently there are more than one div that are marked as open; oops! close them all
+                        close_all_ids = True
+                    else:
+                        all_ids_closed = False
+                        open_div_list.append(subaccount.id)
+        
+        if close_all_ids: # there has been an irregularity; close all the divs; reset the session variables, too
+            open_div_list = []
+            for subaccount in SubAccount.objects.filter(Q(fiscal_year__id=fiscal_year.id)):
+                key = base_key+str(subaccount.id)
+                request.session[key]='closed'
+
+    elif int(sending_page) == 2:
+        base_key = "credit_card_entries-"
+        close_all_ids = False
+        all_ids_closed = True
+        for credit_card in CreditCard.objects.all():
+            key = base_key+str(credit_card.id)
+            if key in request.session:
+                if request.session[key]=='open':
+                    if all_ids_closed == False: #apparently there are more than one div that are marked as open; oops! close them all
+                        close_all_ids = True
+                    else:
+                        all_ids_closed = False
+                        open_div_list.append(credit_card.id)
+        
+        if close_all_ids: # there has been an irregularity; close all the divs; reset the session variables, too
+            open_div_list = []
+            for credit_card in CreditCard.objects.all():
+                key = base_key+str(credit_card.id)
+                request.session[key]='closed'
+
+    json_open_div_id_list = simplejson.dumps(open_div_list)
+
+    return json_open_div_id_list
+
+
 
