@@ -70,6 +70,7 @@ div.f3 { clear: both; }
 	<tr>
 	<td> Date </td>
 	<td> Description </td>
+	<td> Note </td>
 	<td style="text-align: center;"> Subaccount </td>
 	<td style="text-align: center;"> Split </td>
 	<td style="text-align: center;"> Debit </td>
@@ -94,6 +95,7 @@ div.f3 { clear: both; }
 	    <tr>
 	      <td> {{ebl.expense.date}} </td>
 	      <td> {{ebl.expense.description}}</td>
+	      <td title="{{ebl.expense.extra_note}}"> {{ebl.expense.abbrev_note}}</td>
 	      <td> 
 	         {% if ebl.subaccount != None %} {{ ebl.subaccount }}{% endif %} 
 	      </td>
@@ -125,7 +127,7 @@ div.f3 { clear: both; }
 	    {% endif %}
 	    {% endfor %}
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Totals 
+	      <td colspan="5" style="text-align: right;"> <strong>Totals 
 	      {% if not user_preferences.view_checked_only %}
 	      {% if unchecked_only %} <strong style ="color: red">(may be innacurate, since only unchecked entries are being shown) </strong>
 	      {% endif %}
@@ -139,7 +141,7 @@ div.f3 { clear: both; }
 	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Budget </strong> </td> 
+	      <td colspan="5" style="text-align: right;"> <strong>Budget </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_available}}</strong> </td>
 	      <td></td>
 	      <td></td>
@@ -147,7 +149,7 @@ div.f3 { clear: both; }
 	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Remaining </strong> </td> 
+	      <td colspan="5" style="text-align: right;"> <strong>Remaining </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>

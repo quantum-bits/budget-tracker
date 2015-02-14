@@ -70,6 +70,7 @@ div.f3 { clear: both; }
 	<tr>
 	<td> Date </td>
 	<td> Description </td>
+	<td> Note </td>
 	<td style="text-align: center;"> Budget Line </td>
 	<td style="text-align: center;"> Split </td>
 	<td style="text-align: center;"> Debit </td>
@@ -86,10 +87,11 @@ div.f3 { clear: both; }
 	    <tr>
 	      <td> {{ebl.expense.date}} </td>
 	      <td> {{ebl.expense.description}}</td>
+	      <td title="{{ebl.expense.extra_note}}"> {{ebl.expense.abbrev_note}}</td>
 	      <td style="text-align: center;"> 
 	         {{ ebl.budget_line.code }}
 	      </td>
-	      <td style="text-align: center;"> 
+	      <td title="{{ebl.expense.retrieve_split}}" style="text-align: center;"> 
 		{% if ebl.expense.is_split_transaction %}
 		   Split: {{ebl.expense.total_credit_minus_debit_string}}
 		{% endif %}
@@ -114,7 +116,7 @@ div.f3 { clear: both; }
 	    </tr>
 	    {% endfor %}
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Totals </strong> </td> 
+	      <td colspan="5" style="text-align: right;"> <strong>Totals </strong> </td> 
 	      <td style="text-align: right;"> <strong>{{row.total_debit}} </strong></td>
 	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
 	      <td></td>
@@ -123,7 +125,7 @@ div.f3 { clear: both; }
 	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Budget </strong> </td> 
+	      <td colspan="5" style="text-align: right;"> <strong>Budget </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.subaccount_available}}</strong> </td>
 	      <td></td>
 	      <td></td>
@@ -131,7 +133,7 @@ div.f3 { clear: both; }
 	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Remaining </strong> </td> 
+	      <td colspan="5" style="text-align: right;"> <strong>Remaining </strong> </td> 
 	      <td colspan="2" style="text-align: right;"> <strong>{{row.subaccount_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>

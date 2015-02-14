@@ -24,6 +24,7 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
+
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
 
