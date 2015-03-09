@@ -8,15 +8,14 @@ from django.db.models import Q
 from django.forms.models import inlineformset_factory
 from django.shortcuts import render, redirect
 from django.template import RequestContext
-from django.utils import simplejson
 from django.utils.functional import curry
 
 from .models import *
 from .forms import *
 
+import json
 import csv
 from django.http import HttpResponse, HttpResponseRedirect
-import xlwt
 from os.path import expanduser
 from datetime import date
 from datetime import datetime
@@ -542,7 +541,7 @@ def new_budget_entry(request, id = None):
         if bl.has_subaccounts:
             budget_lines_with_subaccounts.append(str(bl.id))
 
-    json_bls_with_sas = simplejson.dumps(budget_lines_with_subaccounts)
+    json_bls_with_sas = json.dumps(budget_lines_with_subaccounts)
 
     budget_line_labels = []
     subaccount_labels = []
@@ -550,8 +549,8 @@ def new_budget_entry(request, id = None):
         budget_line_labels.append(form['budget_line'].id_for_label)
         subaccount_labels.append(form['subaccount'].id_for_label)
 
-    json_budget_line_labels = simplejson.dumps(budget_line_labels)
-    json_subaccount_labels = simplejson.dumps(subaccount_labels)
+    json_budget_line_labels = json.dumps(budget_line_labels)
+    json_subaccount_labels = json.dumps(subaccount_labels)
     errordict={}
     dict = {"formset": formset,
             "date": form_date,
@@ -864,7 +863,7 @@ def construct_json_open_div_id_list(request, sending_page):
                 key = base_key+str(credit_card.id)
                 request.session[key]='closed'
 
-    json_open_div_id_list = simplejson.dumps(open_div_list)
+    json_open_div_id_list = json.dumps(open_div_list)
 
     return json_open_div_id_list
 

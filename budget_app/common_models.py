@@ -32,7 +32,7 @@ class Person(StampedModel):
     cell_phone = models.CharField(max_length=20, blank=True)
     work_phone = models.CharField(max_length=20, blank=True)
 
-    photo = models.ImageField(upload_to='photos',blank=True)
+    # photo = models.ImageField(upload_to='photos',blank=True)
 
     class Meta:
         verbose_name_plural = 'people'

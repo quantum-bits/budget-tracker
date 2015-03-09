@@ -9,7 +9,7 @@ class ExpenseModelForm(forms.ModelForm):
 
     class Meta:
         model = Expense
-        exclude = ('date')
+        exclude = ('date',)
         widgets = {
           'extra_note': forms.Textarea(attrs={'rows':2, 'cols':15})
         }
