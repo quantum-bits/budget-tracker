@@ -373,6 +373,7 @@ class ExpenseBudgetLine(models.Model):
     expense = models.ForeignKey(Expense, related_name='expense_budget_line')
     budget_line = models.ForeignKey(BudgetLine, related_name='expense_budget_line')
     subaccount = models.ForeignKey(SubAccount, blank = True, null = True, related_name='expense_budget_line')
+    is_budget_adjustment = models.BooleanField(default = False)
 
     def formattedprice(self):
         return "%01.2f" % self.amount
