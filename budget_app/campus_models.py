@@ -69,6 +69,7 @@ class DepartmentMember(Person):
                     'subaccount': subaccount, 
                     'fraction': "{0:.0f}%".format(100*account_owner.fraction),
                     'available': self.dollar_format_parentheses(subaccount.amount_available, True),
+                    'adjusted_available': self.dollar_format_parentheses(subaccount.adjusted_budget(user_preferences), True),
                     'available_share': self.dollar_format_parentheses(subaccount.amount_available*Decimal(str(account_owner.fraction)), True),
                     'amount_remaining': self.dollar_format_parentheses(remaining,True),
                     'amount_remaining_share': self.dollar_format_parentheses(subaccount.amount_remaining(user_preferences)*Decimal(str(account_owner.fraction)), True),
@@ -96,7 +97,7 @@ class SubAccount(models.Model):
 
     def total_debit(self, user_preferences):
         tot = 0
-        for expense_budget_line in self.expense_budget_line.all():
+        for expense_budget_line in self.expense_budget_line.filter(is_budget_adjustment = False):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
                     tot = tot + expense_budget_line.amount
@@ -104,19 +105,17 @@ class SubAccount(models.Model):
 
     def total_credit(self, user_preferences):
         tot = 0
-        for expense_budget_line in self.expense_budget_line.all():
+        for expense_budget_line in self.expense_budget_line.filter(is_budget_adjustment = False):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
                     tot = tot + expense_budget_line.amount
         return tot
 
-    def amount_remaining(self, user_preferences):
-        return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
-
     def debit_month(self, user_preferences, month, year):
         tot = 0
         for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)):
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = False)):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
                     tot = tot + expense_budget_line.amount
@@ -125,17 +124,35 @@ class SubAccount(models.Model):
     def credit_month(self, user_preferences, month, year):
         tot = 0
         for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)):
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = False)):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
                     tot = tot + expense_budget_line.amount
         return tot
 
+    def budget_adjustment(self, user_preferences):
+        tot = 0
+        for expense_budget_line in self.expense_budget_line.filter(is_budget_adjustment = True):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    tot = tot + expense_budget_line.amount
+                else:
+                    tot = tot - expense_budget_line.amount
+        return tot
+
+    def adjusted_budget(self, user_preferences):
+        return self.amount_available + self.budget_adjustment(user_preferences)
+
+    def amount_remaining(self, user_preferences):
+        return self.amount_available+self.budget_adjustment(user_preferences)+self.total_credit(user_preferences)-self.total_debit(user_preferences)
+
     def retrieve_breakdown(self, user_preferences, month, year):
         text_block=''
         num_chars_expense = 11
         for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)):
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = False)):
             if expense_budget_line.expense.include_expense(user_preferences):
                 date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
                 is_credit = False
@@ -147,6 +164,22 @@ class SubAccount(models.Model):
                 text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
         return text_block
 
+    def retrieve_budget_adjustment_breakdown(self, user_preferences, month, year):
+        text_block=''
+        num_chars_expense = 11
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = True)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
+                is_credit = False
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    is_credit = True
+                amount_string = dollar_format_local(expense_budget_line.amount, is_credit)
+                space_len = max(0,num_chars_expense-len(amount_string))
+                filler = space_len*' '
+                text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
+        return text_block
 
     def __unicode__(self):
         if self.abbrev == self.name:
@@ -182,7 +215,7 @@ class BudgetLine(models.Model):
 
     def total_debit(self, user_preferences):
         tot = 0
-        for expense_budget_line in self.expense_budget_line.all():
+        for expense_budget_line in self.expense_budget_line.filter(is_budget_adjustment = False):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
                     tot = tot + expense_budget_line.amount
@@ -190,7 +223,7 @@ class BudgetLine(models.Model):
 
     def total_credit(self, user_preferences):
         tot = 0
-        for expense_budget_line in self.expense_budget_line.all():
+        for expense_budget_line in self.expense_budget_line.filter(is_budget_adjustment = False):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
                     tot = tot + expense_budget_line.amount
@@ -199,7 +232,8 @@ class BudgetLine(models.Model):
     def debit_month(self, user_preferences, month, year):
         tot = 0
         for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)):
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = False)):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
                     tot = tot + expense_budget_line.amount
@@ -208,20 +242,52 @@ class BudgetLine(models.Model):
     def credit_month(self, user_preferences, month, year):
         tot = 0
         for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)):
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = False)):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
                     tot = tot + expense_budget_line.amount
         return tot
 
+    def budget_adjustment(self, user_preferences):
+        tot = 0
+        for expense_budget_line in self.expense_budget_line.filter(is_budget_adjustment = True):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    tot = tot + expense_budget_line.amount
+                else:
+                    tot = tot - expense_budget_line.amount
+        return tot
+
+    def adjusted_budget(self, user_preferences):
+        return self.amount_available + self.budget_adjustment(user_preferences)
+
     def amount_remaining(self, user_preferences):
-        return self.amount_available+self.total_credit(user_preferences)-self.total_debit(user_preferences)
+        return self.amount_available+self.budget_adjustment(user_preferences)+self.total_credit(user_preferences)-self.total_debit(user_preferences)
 
     def retrieve_breakdown(self, user_preferences, month, year):
         text_block=''
         num_chars_expense = 11
         for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)):
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = False)):
+            if expense_budget_line.expense.include_expense(user_preferences):
+                date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
+                is_credit = False
+                if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
+                    is_credit = True
+                amount_string = dollar_format_local(expense_budget_line.amount, is_credit)
+                space_len = max(0,num_chars_expense-len(amount_string))
+                filler = space_len*' '
+                text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
+        return text_block
+
+    def retrieve_budget_adjustment_breakdown(self, user_preferences, month, year):
+        text_block=''
+        num_chars_expense = 11
+        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
+                                                                   &Q(expense__date__year=year)
+                                                                   &Q(is_budget_adjustment = True)):
             if expense_budget_line.expense.include_expense(user_preferences):
                 date_string = expense_budget_line.expense.date.strftime("%m/%d/%y")
                 is_credit = False
@@ -275,6 +341,13 @@ class Expense(models.Model):
     extra_note = models.TextField(blank=True, null=True)
 
 #    further action required (what?)
+
+    def includes_budget_adjustment(self):
+        includes_budget_adjustment_bool = False
+        for expense_budget_line in self.expense_budget_line.all():
+            if expense_budget_line.is_budget_adjustment == True:
+                includes_budget_adjustment_bool = True
+        return includes_budget_adjustment_bool
 
     def abbrev_note(self):
         num_slice = 15
@@ -377,6 +450,12 @@ class ExpenseBudgetLine(models.Model):
 
     def formattedprice(self):
         return "%01.2f" % self.amount
+
+    def formattedprice_parentheses(self):
+        if self.debit_or_credit == self.CREDIT:
+            return "%01.2f" % self.amount
+        else:
+            return "(%01.2f)" % self.amount
 
     def __unicode__(self):
         return '{0}: {1}'.format(self.budget_line, self.expense)

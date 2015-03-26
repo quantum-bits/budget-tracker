@@ -61,14 +61,15 @@ div.f3 { clear: both; }
 	<div class="accordion-inner">
 
 <div class="content-center">
-    <table class="table table-striped table-bordered table-hover" style="width: 800px">
+    <table class="table table-striped table-bordered table-hover" style="width: 900px">
       <thead>
 	<tr>
 	  <th colspan="4"> Summary </th>
 	</tr>
 	<tr>
 	<td> Subaccount </td>
-	<td style="text-align: center;"> Total Budget</td>
+	<td style="text-align: center;"> Total Orig Budget</td>
+	<td style="text-align: center;"> Total Adj Budget</td>
 	<td style="text-align: center;"> Amount Remaining </td>
 	<td style="text-align: center;"> Share</td>
 	<td style="text-align: center;"> Share of Amount Remaining</td>
@@ -78,13 +79,14 @@ div.f3 { clear: both; }
 	    <tr>
 	      <td style="text-align: left;"> {{subaccount.subaccount}}</td>
 	      <td style="text-align: center;"> {{subaccount.available}}</td>
+	      <td style="text-align: center;"> {{subaccount.adjusted_available}}</td>
 	      <td style="text-align: center;"> {{subaccount.amount_remaining}}</td>
 	      <td style="text-align: center;"> {{subaccount.fraction}}</td>
 	      <td style="text-align: center;"> {{subaccount.amount_remaining_share}}</td>
 	    </tr>
 	    {% endfor %}
 	    <tr>
-	      <td colspan="4" style="text-align: right;"> <strong>Total </strong> </td> 
+	      <td colspan="5" style="text-align: right;"> <strong>Total </strong> </td> 
               <td style="text-align: center"> <strong>{{owner.total}} </strong></td>
 	    </tr>
       </tbody>

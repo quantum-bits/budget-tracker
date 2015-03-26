@@ -48,6 +48,7 @@
 	<td style="text-align: center;"> Checked </td>
 	<td style="text-align: center;"> Encumbrance </td>
 	<td style="text-align: center;"> Future </td>
+	<td style="text-align: center;"> Budget Adj </td>
 	<td style="text-align: center;"> Edit/Delete </td>
 	</thead>
 
@@ -63,11 +64,13 @@
 		<div>
 	         {{ ebl.budget_line.code }}{% if ebl.subaccount != None %} [{{ ebl.subaccount }}]{% endif %}: 
 		   {% if ebl.debit_or_credit == ebl.DEBIT %} ({{ebl.formattedprice }}) {% else %} {{ebl.formattedprice}} {% endif %} 
+		   {% if ebl.is_budget_adjustment %} <strong> [Budget Adj] </strong> {% endif %}
 		</div>
 		{% endfor %}
 		{% else %}
 		{% for ebl in expense.expense_budget_line.all %}
 		{{ ebl.budget_line.code }}{% if ebl.subaccount != None %} [{{ ebl.subaccount }}]{% endif %}
+		{% if ebl.is_budget_adjustment %} <strong> [Budget Adj] </strong> {% endif %}
 		{% endfor %}
 		{% endif %}
 	      </td>
@@ -85,6 +88,7 @@
 		{% endif %} </td>
 	      <td style="text-align: center;"> {% if expense.encumbered %} x {% endif %} </td>
 	      <td style="text-align: center;"> {% if expense.future_expense %} x {% endif %} </td>
+	      <td style="text-align: center;"> {% if expense.includes_budget_adjustment %} x {% endif %} </td>
 	      <td style="text-align: center;"> 
 		{% if can_edit %}
 		<a href="{% url 'new_budget_entry' expense.id %}?next={{ request.path|urlencode }}" >Edit</a>  | 

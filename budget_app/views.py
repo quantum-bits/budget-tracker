@@ -23,6 +23,11 @@ from datetime import datetime
 def home(request):
     return render(request, 'home.html')
 
+# To Do:
+# 1. Do a "freeze panes" thing like was done on iChair.  Do it for the budget entries page, and maybe other ones.
+# 2. Possible to speed this app up?!?  Check it out with the debug toolbar, etc.
+# 3. hint at the top of the budget lines page saying adj budget +/- expense = remaining
+
 
 # on form for entering expenses, return an error if the date is not
 # within the FY that is currently being viewed!!!!
@@ -162,8 +167,10 @@ def budget_line_entries(request, id = None):
                                      'expense_budget_line_list': ebl_list,
                                      'total_debit': dollar_format(budget_line.total_debit(user_preferences)),
                                      'total_credit': dollar_format(budget_line.total_credit(user_preferences)),
+                                     'budget_adjustment': dollar_format_parentheses(budget_line.budget_adjustment(user_preferences), True),
                                      'total_debit_minus_credit': d_m_c_string,
                                      'budget_line_available': dollar_format_parentheses(budget_line.amount_available, True),
+                                     'adjusted_budget': dollar_format_parentheses(budget_line.adjusted_budget(user_preferences), True),
                                      'budget_line_remaining': dollar_format_parentheses(budget_line.amount_remaining(user_preferences), True)})
         department_list.append({'department': department,
                                 'budget_line_list': budget_line_list})
@@ -237,8 +244,10 @@ def subaccount_entries(request):
                                 'expense_budget_line_list': ebl_list,
                                 'total_debit': dollar_format(subaccount.total_debit(user_preferences)),
                                 'total_credit': dollar_format(subaccount.total_credit(user_preferences)),
+                                'budget_adjustment': dollar_format_parentheses(subaccount.budget_adjustment(user_preferences), True),
                                 'total_debit_minus_credit': d_m_c_string,
                                 'subaccount_available': dollar_format_parentheses(subaccount.amount_available, True),
+                                'adjusted_budget': dollar_format_parentheses(subaccount.adjusted_budget(user_preferences), True),
                                 'subaccount_remaining': dollar_format_parentheses(subaccount.amount_remaining(user_preferences), True)})
 
     can_edit = False
@@ -283,6 +292,7 @@ def subaccount_summary(request):
 
     subaccount_list = []
     all_subaccounts_total = 0
+    all_subaccounts_adjusted_total = 0
     budget_total = 0
     credit_minus_debit_total = 0
 
@@ -292,8 +302,12 @@ def subaccount_summary(request):
             owned_by.append(account_owner.department_member.last_name+" ({0:.0f}%)".format(account_owner.fraction*100))
         data_entries = []
         all_subaccounts_total = all_subaccounts_total+subaccount.amount_available
+        subaccount_adjusted_budget=subaccount.adjusted_budget(user_preferences)
+        all_subaccounts_adjusted_total = all_subaccounts_adjusted_total+subaccount_adjusted_budget
+        budget_adjustment_note = ''
         for month, year, year_name in month_list:
             note = subaccount.retrieve_breakdown(user_preferences,month, year)
+            budget_adjustment_note = budget_adjustment_note+subaccount.retrieve_budget_adjustment_breakdown(user_preferences,month, year)
             entry = subaccount.credit_month(user_preferences,month, year)-subaccount.debit_month(user_preferences,month, year)
             data_entries.append({'amount': dollar_format_parentheses(entry,False), 'breakdown':note})
 #            department_total = department_total + entry
@@ -307,19 +321,21 @@ def subaccount_summary(request):
         subaccount_list.append({'subaccount': subaccount,
                                 'owned_by': owned_by,
                                 'data_entries': data_entries,
+                                'budget_adjustment_note': budget_adjustment_note,
                                 'total_debit_minus_credit': dollar_format_parentheses(total_subaccount,True),
                                 'subaccount_available': dollar_format_parentheses(subaccount.amount_available,True),
+                                'adjusted_budget': dollar_format_parentheses(subaccount_adjusted_budget,True),
                                 'subaccount_remaining': dollar_format_parentheses(budget_remaining_subaccount,True),
                                 'remaining_negative': budget_remaining_is_negative})
 
-    budget_remaining = all_subaccounts_total+credit_minus_debit_total
+    budget_remaining = all_subaccounts_adjusted_total+credit_minus_debit_total
     budget_remaining_is_negative = False
     if budget_remaining < 0:
         budget_remaining_is_negative = True
     subaccount_data = {'subaccount_list': subaccount_list,
                        'all_subaccounts_total': all_subaccounts_total,
                        'month_name_list': month_name_list,
-                       'all_subaccounts_total': all_subaccounts_total,
+                       'adjusted_budget_total': all_subaccounts_adjusted_total,
                        'budget_remaining_is_negative': budget_remaining_is_negative,
                        'budget_remaining': dollar_format_parentheses(budget_remaining, True),
                        'budget_total': all_subaccounts_total,
@@ -360,13 +376,17 @@ def budget_line_summary(request):
         department_totals_list=[]
         department_total = 0
         budget_total = 0
+        adjusted_budget_total = 0
         for month, year, year_name in month_list:
             department_totals_list.append(dollar_format_parentheses(department.total_for_month(user_preferences, month, year),True))
         for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=department.id)):
             data_entries = []
             budget_total = budget_total+budget_line.amount_available
+            adjusted_budget_total = adjusted_budget_total+budget_line.adjusted_budget(user_preferences)
+            budget_adjustment_note = ''
             for month, year, year_name in month_list:
                 note = budget_line.retrieve_breakdown(user_preferences,month, year)
+                budget_adjustment_note = budget_adjustment_note+budget_line.retrieve_budget_adjustment_breakdown(user_preferences,month, year)
                 entry = budget_line.credit_month(user_preferences,month, year)-budget_line.debit_month(user_preferences,month, year)
                 data_entries.append({'amount': dollar_format_parentheses(entry,False), 'breakdown':note})
                 department_total = department_total + entry
@@ -380,11 +400,14 @@ def budget_line_summary(request):
 
             budget_line_list.append({'budget_line': budget_line,
                                      'data_entries': data_entries,
+                                     'budget_adjustment_note': budget_adjustment_note,
                                      'total_debit_minus_credit': dollar_format_parentheses(total_budget_line,True),
                                      'budget_line_available': dollar_format_parentheses(budget_line.amount_available,True),
+                                     'adjusted_budget': dollar_format_parentheses(budget_line.adjusted_budget(user_preferences),True),
                                      'budget_line_remaining': dollar_format_parentheses(budget_remaining_in_line,True),
                                      'remaining_negative': budget_remaining_is_negative})
-        budget_remaining = budget_total+department_total
+        budget_remaining = adjusted_budget_total+department_total
+        print budget_remaining, adjusted_budget_total, department_total
         budget_remaining_is_negative = False
         if budget_remaining < 0:
             budget_remaining_is_negative = True
@@ -394,6 +417,7 @@ def budget_line_summary(request):
                                 'department_totals_list': department_totals_list,
                                 'department_total': dollar_format_parentheses(department_total,True),
                                 'budget_total': dollar_format_parentheses(budget_total,True),
+                                'adjusted_budget_total': dollar_format_parentheses(adjusted_budget_total,True),
                                 'budget_remaining':dollar_format_parentheses(budget_remaining,True),
                                 'budget_remaining_is_negative': budget_remaining_is_negative})
 

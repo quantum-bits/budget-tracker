@@ -76,6 +76,7 @@
 	<tr>
 	<td> Amount </td>
 	<td> Debit/Credit </td>
+	<td> Budget Adjustment </td>
 	<td> Budget Line </td>
 	<td> Subaccount </td>
 	<td> Delete </td>
@@ -84,6 +85,7 @@
 	<tr>
         <td>{{subform.id}} {{ subform.amount }} {% if subform.errors.amount %} <p style="color:red"> Error: {{subform.errors.amount}} </p> {% endif %}</td>
 	<td>{{subform.id}} {{ subform.debit_or_credit}}</td>
+	<td>{{subform.id}} {{ subform.is_budget_adjustment}}</td>
 	<td>{{subform.id}} {{ subform.budget_line}} {% if subform.errors.budget_line %} <p style="color:red"> Error: {{subform.errors.budget_line}} </p> {% endif %}</td>
 	<td>{{subform.id}} {{ subform.subaccount }}</td>
 	<td>{{subform.id}} {% if subform.amount.value %} {{subform.DELETE}} {% endif %} </td>

@@ -52,7 +52,8 @@ div.f3 { clear: both; }
 	<tr>
 	<td> <strong> Subaccount</strong> </td>
 	<td style="text-align: center;"> <strong>Owner(s)</strong> </td>
-	<td style="text-align: center;"> <strong>Budget</strong> </td>
+	<td style="text-align: center;"> <strong>Orig Budget</strong> </td>
+	<td style="text-align: center;"> <strong>Adj Budget</strong> </td>
 	<td style="text-align: center;"> <strong>Remaining</strong> </td>
 	{% for month in subaccount_data.month_name_list %}
 	<td style="text-align: center;"> <strong>{{month}}</strong> </td>
@@ -70,6 +71,7 @@ div.f3 { clear: both; }
 	    {% endfor %}
 	  </td>
 	  <td style="text-align: right;">{{row.subaccount_available}}</td>
+	  <td title="{{row.budget_adjustment_note}}" style="text-align: right;">{{row.adjusted_budget}}</td>
 	    {% if row.remaining_negative %}
 	       <td style="text-align: right; color: red"> {{row.subaccount_remaining}} </td>
 	    {% else %}
@@ -82,8 +84,9 @@ div.f3 { clear: both; }
 	</tr>
 	{% endfor %}
 	<tr>
-	  <td style="text-align: right;"> <strong>Totals</strong> </td>
+	  <td colspan="2" style="text-align: right;"> <strong>Totals</strong> </td>
 	  <td style="text-align: right;"> {{subaccount_data.budget_total}} </td>
+	  <td style="text-align: right;"> {{subaccount_data.adjusted_budget_total}} </td>
 	    {% if subaccount_data.budget_remaining_is_negative %}
 	       <td style="text-align: right; color: red"> {{subaccount_data.budget_remaining}} </td>
 	    {% else %}

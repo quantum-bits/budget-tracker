@@ -54,7 +54,7 @@ div.f3 { clear: both; }
 	  onclick="divRegister({{row.budget_line.id}})">
 	 <div class="f1">{{row.budget_line}}</div>
 	 <div class="f2">
-	 {{row.budget_line_available}}{{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
+	 {{row.adjusted_budget}}{{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
 	 </a>
        </div>{# accordion-heading #}
 
@@ -73,6 +73,7 @@ div.f3 { clear: both; }
 	<td> Note </td>
 	<td style="text-align: center;"> Subaccount </td>
 	<td style="text-align: center;"> Split </td>
+	<td style="text-align: center;"> Budget Adj </td>
 	<td style="text-align: center;"> Debit </td>
 	<td style="text-align: center;"> Credit </td>
 	<td style="text-align: center;"> Checked 
@@ -106,11 +107,16 @@ div.f3 { clear: both; }
 	      {% else %}
 		 <td></td>
               {% endif %}
-	      {% if ebl.debit_or_credit == ebl.DEBIT %} 
-	        <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
-	      {% else %}
-	        <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
-	      {% endif %}
+	      {% if ebl.is_budget_adjustment %}
+                <td style="text-align: right;"> {{ebl.formattedprice_parentheses}} </td> <td></td><td></td>
+              {% else %}
+                <td></td>
+	        {% if ebl.debit_or_credit == ebl.DEBIT %} 
+	          <td style="text-align: right;"> {{ebl.formattedprice}} </td> <td></td>
+	        {% else %}
+	          <td></td> <td style="text-align: right;"> {{ebl.formattedprice}} </td>
+	        {% endif %}
+              {% endif %}
 	      <td style="text-align: center;"> {% if ebl.expense.checked %} x 
 		{% elif can_edit %}
 		<input type="checkbox" name="expense_check_flag" id="option{{ebl.expense.id}}" value={{ebl.expense.id}} />
@@ -133,6 +139,7 @@ div.f3 { clear: both; }
 	      {% endif %}
 	      {% endif %}
 	      </strong> </td>
+	      <td style="text-align: right;"> <strong>{{row.budget_adjustment}} </strong></td>
 	      <td style="text-align: right;"> <strong>{{row.total_debit}} </strong></td>
 	      <td style="text-align: right;"> <strong>{{row.total_credit}} </strong></td>
 	      <td></td>
@@ -141,8 +148,16 @@ div.f3 { clear: both; }
 	      {% if can_edit %}<td></td>{% endif %}
 	    </tr>
 	    <tr>
-	      <td colspan="5" style="text-align: right;"> <strong>Budget </strong> </td> 
-	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_available}}</strong> </td>
+	      <td colspan="5" style="text-align: right;"> <strong>Original Budget </strong> </td> 
+	      <td colspan="3" style="text-align: right;"> <strong>{{row.budget_line_available}}</strong> </td>
+	      <td></td>
+	      <td></td>
+	      <td></td>
+	      {% if can_edit %}<td></td>{% endif %}
+	    </tr>
+	    <tr>
+	      <td colspan="5" style="text-align: right;"> <strong>Adjusted Budget </strong> </td> 
+	      <td colspan="3" style="text-align: right;"> <strong>{{row.adjusted_budget}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
@@ -150,7 +165,7 @@ div.f3 { clear: both; }
 	    </tr>
 	    <tr>
 	      <td colspan="5" style="text-align: right;"> <strong>Remaining </strong> </td> 
-	      <td colspan="2" style="text-align: right;"> <strong>{{row.budget_line_remaining}}</strong> </td>
+	      <td colspan="3" style="text-align: right;"> <strong>{{row.budget_line_remaining}}</strong> </td>
 	      <td></td>
 	      <td></td>
 	      <td></td>
