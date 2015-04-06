@@ -154,10 +154,25 @@ def budget_line_entries(request, id = None):
         budget_line_list = []
         for budget_line in BudgetLine.objects.filter(Q(fiscal_year__id=fiscal_year.id)&Q(department__id=department.id)):
             ebl_list = []
-            for expense_budget_line in budget_line.expense_budget_line.all():
+            bl_total_debit = 0
+            bl_total_credit = 0
+            bl_budget_adjustment = 0
+            for expense_budget_line in budget_line.expense_budget_line.select_related('expense','subaccount').all():
                 if expense_budget_line.expense.include_expense(user_preferences):
                     ebl_list.append(expense_budget_line)
-            total_debit_minus_credit = budget_line.total_debit(user_preferences)-budget_line.total_credit(user_preferences)
+                    if expense_budget_line.is_budget_adjustment == False:
+                        if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                            bl_total_debit+=expense_budget_line.amount
+                        else:
+                            bl_total_credit+=expense_budget_line.amount
+                    else:
+                        if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                            bl_budget_adjustment-=expense_budget_line.amount
+                        else:
+                            bl_budget_adjustment+=expense_budget_line.amount                        
+            total_debit_minus_credit = bl_total_debit-bl_total_credit
+            bl_adjusted_budget = budget_line.amount_available + bl_budget_adjustment
+            bl_amount_remaining = bl_adjusted_budget - total_debit_minus_credit
             if total_debit_minus_credit < 0:
                 d_m_c_string = " + "+dollar_format(-total_debit_minus_credit)
             else:
@@ -165,13 +180,13 @@ def budget_line_entries(request, id = None):
 
             budget_line_list.append({'budget_line': budget_line, 
                                      'expense_budget_line_list': ebl_list,
-                                     'total_debit': dollar_format(budget_line.total_debit(user_preferences)),
-                                     'total_credit': dollar_format(budget_line.total_credit(user_preferences)),
-                                     'budget_adjustment': dollar_format_parentheses(budget_line.budget_adjustment(user_preferences), True),
+                                     'total_debit': dollar_format(bl_total_debit),
+                                     'total_credit': dollar_format(bl_total_credit),
+                                     'budget_adjustment': dollar_format_parentheses(bl_budget_adjustment, True),
                                      'total_debit_minus_credit': d_m_c_string,
                                      'budget_line_available': dollar_format_parentheses(budget_line.amount_available, True),
-                                     'adjusted_budget': dollar_format_parentheses(budget_line.adjusted_budget(user_preferences), True),
-                                     'budget_line_remaining': dollar_format_parentheses(budget_line.amount_remaining(user_preferences), True)})
+                                     'adjusted_budget': dollar_format_parentheses(bl_adjusted_budget, True),
+                                     'budget_line_remaining': dollar_format_parentheses(bl_amount_remaining, True)})
         department_list.append({'department': department,
                                 'budget_line_list': budget_line_list})
 
@@ -230,11 +245,27 @@ def subaccount_entries(request):
     subaccount_list = []
     for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
         ebl_list = []
-        for expense_budget_line in subaccount.expense_budget_line.all():
+
+        sa_total_debit = 0
+        sa_total_credit = 0
+        sa_budget_adjustment = 0
+        for expense_budget_line in subaccount.expense_budget_line.select_related('expense','budget_line').all():
             if expense_budget_line.expense.include_expense(user_preferences):
                 ebl_list.append(expense_budget_line)
-        
-        total_debit_minus_credit = subaccount.total_debit(user_preferences)-subaccount.total_credit(user_preferences)
+                if expense_budget_line.is_budget_adjustment == False:
+                    if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                        sa_total_debit+=expense_budget_line.amount
+                    else:
+                        sa_total_credit+=expense_budget_line.amount
+                else:
+                    if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                        sa_budget_adjustment-=expense_budget_line.amount
+                    else:
+                        sa_budget_adjustment+=expense_budget_line.amount                        
+        total_debit_minus_credit = sa_total_debit-sa_total_credit
+        sa_adjusted_budget = subaccount.amount_available + sa_budget_adjustment
+        sa_amount_remaining = sa_adjusted_budget - total_debit_minus_credit
+
         if total_debit_minus_credit < 0:
             d_m_c_string = " + "+dollar_format(-total_debit_minus_credit)
         else:
@@ -242,13 +273,13 @@ def subaccount_entries(request):
                 
         subaccount_list.append({'subaccount': subaccount, 
                                 'expense_budget_line_list': ebl_list,
-                                'total_debit': dollar_format(subaccount.total_debit(user_preferences)),
-                                'total_credit': dollar_format(subaccount.total_credit(user_preferences)),
-                                'budget_adjustment': dollar_format_parentheses(subaccount.budget_adjustment(user_preferences), True),
+                                'total_debit': dollar_format(sa_total_debit),
+                                'total_credit': dollar_format(sa_total_credit),
+                                'budget_adjustment': dollar_format_parentheses(sa_budget_adjustment, True),
                                 'total_debit_minus_credit': d_m_c_string,
                                 'subaccount_available': dollar_format_parentheses(subaccount.amount_available, True),
-                                'adjusted_budget': dollar_format_parentheses(subaccount.adjusted_budget(user_preferences), True),
-                                'subaccount_remaining': dollar_format_parentheses(subaccount.amount_remaining(user_preferences), True)})
+                                'adjusted_budget': dollar_format_parentheses(sa_adjusted_budget, True),
+                                'subaccount_remaining': dollar_format_parentheses(sa_amount_remaining, True)})
 
     can_edit = False
     if user.is_superuser:

@@ -573,7 +573,7 @@ class ExpenseBudgetLine(models.Model):
         subaccount_summary_list = []
         for key in subaccount_summary:
             subaccount_summary_list.append(subaccount_summary[key])
-        new_list = sorted(subaccount_summary_list, key=lambda k: k['abbrev'])
+        sorted_subaccount_summary_list = sorted(subaccount_summary_list, key=lambda k: k['abbrev'])
 
         budget_remaining_is_negative = False
         if budget_remaining < 0:
@@ -581,7 +581,7 @@ class ExpenseBudgetLine(models.Model):
         subaccount_totals_list_formatted=[]
         for subtotal in subaccount_totals_list:
             subaccount_totals_list_formatted.append(dollar_format_parentheses(subtotal, True)),
-        subaccount_data = {'subaccount_list': subaccount_summary_list,
+        subaccount_data = {'subaccount_list': sorted_subaccount_summary_list,
                            'all_subaccounts_total': all_subaccounts_total,
                            'month_name_list': month_name_list,
                            'adjusted_budget_total': all_subaccounts_adjusted_total,
