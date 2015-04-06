@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from decimal import *
 
+
 # user.is_superuser can be used to signal that someone can mess with the
 # budget....  (it's boolean)
 # ./manage.py dumpdata (put in fixture, etc.); can dump select classes, too.
@@ -123,9 +124,7 @@ class SubAccount(models.Model):
 
     def credit_month(self, user_preferences, month, year):
         tot = 0
-        for expense_budget_line in self.expense_budget_line.filter(Q(expense__date__month=month)
-                                                                   &Q(expense__date__year=year)
-                                                                   &Q(is_budget_adjustment = False)):
+        for expense_budget_line in self.expense_budget_line.filter(expense__date__month=month, expense__date__year=year, is_budget_adjustment = False):
             if expense_budget_line.expense.include_expense(user_preferences):
                 if expense_budget_line.debit_or_credit == expense_budget_line.CREDIT:
                     tot = tot + expense_budget_line.amount
@@ -162,6 +161,7 @@ class SubAccount(models.Model):
                 space_len = max(0,num_chars_expense-len(amount_string))
                 filler = space_len*' '
                 text_block=text_block+date_string+'   '+amount_string+filler+expense_budget_line.expense.description+'\n'
+        print "text block", text_block
         return text_block
 
     def retrieve_budget_adjustment_breakdown(self, user_preferences, month, year):
@@ -308,6 +308,17 @@ def dollar_format_local(amount,is_credit):
     else:
         return "({0:.2f})".format(amount)
 
+def dollar_format_parentheses(amount, include_zero):
+    if amount>0:
+        return "{0:.2f}".format(amount)
+    elif amount<0:
+        return "({0:.2f})".format(-amount)
+    elif amount==0 and include_zero:
+        return '0.00'
+    else:
+        return ''
+
+
 class AccountOwner(models.Model):
     """
     Relate a subaccount to one (of the possibly many) department members
@@ -447,6 +458,146 @@ class ExpenseBudgetLine(models.Model):
     budget_line = models.ForeignKey(BudgetLine, related_name='expense_budget_line')
     subaccount = models.ForeignKey(SubAccount, blank = True, null = True, related_name='expense_budget_line')
     is_budget_adjustment = models.BooleanField(default = False)
+
+    @classmethod
+    def create_subaccount_summary(cls, user_preferences, month_list):
+        """
+        fetches and formats the data used to create the subaccount summary page;
+        could probably make this more efficient by using prefetch_related or select_related....
+        """
+
+# Next:
+# - add budget adjustment note, breakdown note
+# ===> the breakdown notes don't work; the budget adjustment ones do, but they are very expensive in terms of hits on the
+#      database (doubled the number of db hits, from 486 to 976, or so); need to rewrite this method (and call it from inside the ebl loop), or make it its own class or something
+# - a few things are not yet appearing in the table or are formatted incorrectly
+
+        fiscal_year = user_preferences.fiscal_year_to_view
+        subaccount_summary = {}
+        num_chars_expense = 11
+
+        month_name_list = []
+        for month, year, year_name in month_list:
+            month_name_list.append(year_name)
+
+        all_subaccounts_total = 0
+        credit_minus_debit_total = 0
+        budget_remaining = 0
+
+        for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
+            owned_by = []
+            for account_owner in subaccount.account_owners.all():
+                owned_by.append(account_owner.department_member.last_name+" ({0:.0f}%)".format(account_owner.fraction*100))
+            all_subaccounts_total = all_subaccounts_total+subaccount.amount_available
+#            budget_adjustment_note = ''
+#            for month, year, year_name in month_list:
+#                budget_adjustment_note+=subaccount.retrieve_budget_adjustment_breakdown(user_preferences,month, year)
+            subaccount_summary[subaccount.id]={
+                'subaccount': subaccount,
+                'abbrev': subaccount.abbrev,
+                'data_list': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                'note_list': ['','','','','','','','','','','',''],
+                'data_entries':[],
+                'budget_adjustment_note': '',
+                'owned_by': owned_by,
+                'original_budget': dollar_format_parentheses(subaccount.amount_available, True),
+                'adjusted_budget': subaccount.amount_available,
+                'remaining': '',
+                'remaining_negative': False,
+                'total_credit_minus_debit': ''
+                }
+
+        all_subaccounts_adjusted_total = all_subaccounts_total
+        data_list_index = 0
+        subaccount_totals_list=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for month, year, year_name in month_list:
+            total_for_month = 0
+# I should probably add a method to expense budget line to append a note or something.  
+# even better -- make the notes their own class, and then I can mess around with them at will, define a unicode method for displaying them, etc.
+            for ebl in cls.objects.select_related('expense').filter(expense__date__month=month,
+                                          expense__date__year=year,
+                                          subaccount__isnull=False):
+                date_string = ebl.expense.date.strftime("%m/%d/%y")
+                if ebl.expense.include_expense(user_preferences):
+                    if ebl.is_budget_adjustment == False:
+                        if ebl.debit_or_credit == ebl.CREDIT:
+                            subaccount_summary[ebl.subaccount.id]['data_list'][data_list_index]+=ebl.amount
+                            credit_minus_debit_total+=ebl.amount
+                            subaccount_totals_list[data_list_index]+=ebl.amount
+                            is_credit = True
+                        else:
+                            subaccount_summary[ebl.subaccount.id]['data_list'][data_list_index]-=ebl.amount
+                            credit_minus_debit_total-=ebl.amount
+                            subaccount_totals_list[data_list_index]-=ebl.amount
+                            is_credit = False
+                    else:
+                        if ebl.debit_or_credit == ebl.CREDIT:
+                            subaccount_summary[ebl.subaccount.id]['adjusted_budget']+=ebl.amount
+                            all_subaccounts_adjusted_total+=ebl.amount
+                            is_credit = True
+                        else:
+                            subaccount_summary[ebl.subaccount.id]['adjusted_budget']-=ebl.amount
+                            all_subaccounts_adjusted_total-=ebl.amount
+                            is_credit = False
+                    amount_string = dollar_format_local(ebl.amount, is_credit)
+                    space_len = max(0,num_chars_expense-len(amount_string))
+                    filler = space_len*' '
+                    addition_to_note = date_string+'   '+amount_string+filler+ebl.expense.description+'\n'
+                    if ebl.is_budget_adjustment == False:
+                        subaccount_summary[ebl.subaccount.id]['note_list'][data_list_index]+=addition_to_note
+                    else:
+                        subaccount_summary[ebl.subaccount.id]['budget_adjustment_note']+=addition_to_note
+
+            data_list_index+=1
+
+        budget_remaining = all_subaccounts_adjusted_total+credit_minus_debit_total
+
+        for key in subaccount_summary:
+            # calculate totals; convert things to the approprate dollar format
+            total=sum(subaccount_summary[key]['data_list'])
+            subaccount_summary[key]['total_credit_minus_debit']=dollar_format_parentheses(total,True)
+            subaccount_summary[key]['total']=dollar_format_parentheses(total,True)
+            remaining = subaccount_summary[key]['adjusted_budget']+total
+            subaccount_summary[key]['remaining']=dollar_format_parentheses(remaining,True)
+            if remaining < 0:
+                subaccount_summary[key]['remaining_negative'] = True
+            subaccount_summary[key]['adjusted_budget']=dollar_format_parentheses(subaccount_summary[key]['adjusted_budget'],True)
+            data_entries_list = []
+# there must be a nicer way to do this...!
+            for ii in range(len(subaccount_summary[key]['data_list'])):
+                entry = subaccount_summary[key]['data_list'][ii]
+                note = subaccount_summary[key]['note_list'][ii]
+                data_entries_list.append({'amount':dollar_format_parentheses(entry,False),'breakdown': note})
+            subaccount_summary[key]['data_entries']=data_entries_list
+# turn the dict into a sorted list
+        subaccount_summary_list = []
+        for key in subaccount_summary:
+            subaccount_summary_list.append(subaccount_summary[key])
+        new_list = sorted(subaccount_summary_list, key=lambda k: k['abbrev'])
+
+        budget_remaining_is_negative = False
+        if budget_remaining < 0:
+            budget_remaining_is_negative = True
+        subaccount_totals_list_formatted=[]
+        for subtotal in subaccount_totals_list:
+            subaccount_totals_list_formatted.append(dollar_format_parentheses(subtotal, True)),
+        subaccount_data = {'subaccount_list': subaccount_summary_list,
+                           'all_subaccounts_total': all_subaccounts_total,
+                           'month_name_list': month_name_list,
+                           'adjusted_budget_total': all_subaccounts_adjusted_total,
+                           'budget_remaining_is_negative': budget_remaining_is_negative,
+                           'budget_remaining': dollar_format_parentheses(budget_remaining, True),
+                           'budget_total': all_subaccounts_total,
+                           'subaccount_totals_list': subaccount_totals_list_formatted,
+                           'all_subaccounts_credit_minus_debit':dollar_format_parentheses(credit_minus_debit_total, True)}
+
+
+#            if expense_budget_line.expense.include_expense(user_preferences):
+#                if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+#                    tot = tot + expense_budget_line.amount
+    
+
+        return subaccount_data
 
     def formattedprice(self):
         return "%01.2f" % self.amount

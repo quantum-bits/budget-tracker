@@ -70,17 +70,17 @@ div.f3 { clear: both; }
 	       <div>{{owner}}</div>
 	    {% endfor %}
 	  </td>
-	  <td style="text-align: right;">{{row.subaccount_available}}</td>
+	  <td style="text-align: right;">{{row.original_budget}}</td>
 	  <td title="{{row.budget_adjustment_note}}" style="text-align: right;">{{row.adjusted_budget}}</td>
 	    {% if row.remaining_negative %}
-	       <td style="text-align: right; color: red"> {{row.subaccount_remaining}} </td>
+	       <td style="text-align: right; color: red"> {{row.remaining}} </td>
 	    {% else %}
-	       <td style="text-align: right;"> {{row.subaccount_remaining}} </td>
+	       <td style="text-align: right;"> {{row.remaining}} </td>
 	    {% endif %}
 	    {% for entry in row.data_entries %}
 	      <td title="{{entry.breakdown}}"style="text-align: right;">{{entry.amount}}</td>
 	    {% endfor %}
-	    <td style="text-align: right;">{{row.total_debit_minus_credit}}</td>
+	    <td style="text-align: right;">{{row.total_credit_minus_debit}}</td>
 	</tr>
 	{% endfor %}
 	<tr>

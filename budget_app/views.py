@@ -281,11 +281,41 @@ def subaccount_summary(request):
     for month, year, year_name in month_list:
         month_name_list.append(year_name)
 
+    subaccount_data = ExpenseBudgetLine.create_subaccount_summary(user_preferences, month_list)
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
+    context = {
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': fiscal_year,
+        'subaccount_data': subaccount_data,
+        'can_edit': can_edit
+        }
+    return render(request, 'subaccount_summary.html', context)
+
+@login_required
+def subaccount_summary2(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    if request.method == 'POST':
+        process_preferences_and_checked_form(request, user_preferences)
+
+    month_list = list_of_months_in_fy(fiscal_year)
+    month_name_list = []
+    for month, year, year_name in month_list:
+        month_name_list.append(year_name)
+
     subaccount_totals_list=[]
     all_subaccounts_credit_minus_debit = 0
     for month, year, year_name in month_list:
         total_for_month = 0
-        for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
+        for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id).prefetch_related('expense_budget_line__expense'):
             total_for_month = total_for_month + subaccount.credit_month(user_preferences, month, year)-subaccount.debit_month(user_preferences, month, year)
         all_subaccounts_credit_minus_debit = all_subaccounts_credit_minus_debit + total_for_month
         subaccount_totals_list.append(dollar_format_parentheses(total_for_month,True))
@@ -354,6 +384,8 @@ def subaccount_summary(request):
         'can_edit': can_edit
         }
     return render(request, 'subaccount_summary.html', context)
+
+
 
 @login_required
 def budget_line_summary(request):

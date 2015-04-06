@@ -12,6 +12,7 @@ urlpatterns = patterns(
     url(r'^subaccountentries/$', 'subaccount_entries', name='subaccount_entries'),
     url(r'^budget_line_summary/$', 'budget_line_summary', name='budget_line_summary'),
     url(r'^subaccount_summary/$', 'subaccount_summary', name='subaccount_summary'),
+    url(r'^subaccount_summary2/$', 'subaccount_summary2', name='subaccount_summary2'),
     url(r'^ownersummary/$', 'owner_summary', name='owner_summary'),
     url(r'^credit_card_entries/$', 'credit_card_entries', name='credit_card_entries'),
     url(r'^newbudgetentry/$', 'new_budget_entry', name='new_budget_entry'),
