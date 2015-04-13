@@ -25,7 +25,7 @@ class SubAccountAdmin(admin.ModelAdmin):
     inlines = [
         AccountOwnerInline,
         ]
-    list_display = ('name','amount_available','fiscal_year',)
+    list_display = ('name','abbrev', 'amount_available','fiscal_year',)
 
 admin.site.register(FiscalYear)
 admin.site.register(Note, NoteAdmin)

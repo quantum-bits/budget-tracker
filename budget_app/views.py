@@ -27,6 +27,11 @@ def home(request):
 # 1. Do a "freeze panes" thing like was done on iChair.  Do it for the budget entries page, and maybe other ones.
 # 2. Possible to speed this app up?!?  Check it out with the debug toolbar, etc.
 # 3. hint at the top of the budget lines page saying adj budget +/- expense = remaining
+# Comments from Bill:
+#   ==> Subacct page: summary line should show adj bud - spent + credits; otherwise you think haven't spent a lot
+#   ==> Budget line entry allowed budget adjustment to get into 132020 without subaccount
+#   x Checked/unchecked option in budget entries page
+#   ==> When deleting unchecked item in budget lines page, check/unchecked option goes back to default
 
 
 # on form for entering expenses, return an error if the date is not
@@ -59,7 +64,52 @@ def profile(request):
     return render(request, 'profile.html', context)
 
 @login_required
-def budget_entries(request):
+def budget_entries(request, id = None):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    fiscal_year = user_preferences.fiscal_year_to_view
+
+    request.session["return_to_page"] = "/budget_app/budgetentries/"
+
+    if request.method == 'POST':
+        process_preferences_and_checked_form(request, user_preferences)
+
+    month_list = list_of_months_in_fy(fiscal_year)
+    budget_entry_list = ExpenseBudgetLine.create_budget_entries_list(user_preferences, month_list)
+
+#    expense_list = []
+#    for expense in Expense.objects.all():
+#        if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
+#            if expense.include_expense(user_preferences):
+#                expense_list.append(expense)
+#                print expense.abbrev_note()
+
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
+    if id == None:
+        unchecked_only = False
+    else:
+        if user_preferences.view_checked_only:
+            unchecked_only = False
+        else:
+            unchecked_only = True
+
+    context = { 
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': fiscal_year,
+        'expense_list': budget_entry_list,
+        'unchecked_only': unchecked_only,
+        'can_edit': can_edit
+        }
+    return render(request, 'budget_entries.html', context)
+
+login_required
+def budget_entries2(request, id = None):
     user = request.user
 # assumes that users each have exactly ONE UserPreferences object
     user_preferences = user.user_preferences.all()[0]
@@ -82,14 +132,23 @@ def budget_entries(request):
     if user.is_superuser:
         can_edit = True
 
+    if id == None:
+        unchecked_only = False
+    else:
+        if user_preferences.view_checked_only:
+            unchecked_only = False
+        else:
+            unchecked_only = True
+
     context = { 
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
         'expense_list': expense_list,
+        'unchecked_only': unchecked_only,
         'can_edit': can_edit
         }
-    return render(request, 'budget_entries.html', context)
+    return render(request, 'budget_entries2.html', context)
 
 
 @login_required

@@ -466,12 +466,6 @@ class ExpenseBudgetLine(models.Model):
         could probably make this more efficient by using prefetch_related or select_related....
         """
 
-# Next:
-# - add budget adjustment note, breakdown note
-# ===> the breakdown notes don't work; the budget adjustment ones do, but they are very expensive in terms of hits on the
-#      database (doubled the number of db hits, from 486 to 976, or so); need to rewrite this method (and call it from inside the ebl loop), or make it its own class or something
-# - a few things are not yet appearing in the table or are formatted incorrectly
-
         fiscal_year = user_preferences.fiscal_year_to_view
         subaccount_summary = {}
         num_chars_expense = 11
@@ -591,13 +585,74 @@ class ExpenseBudgetLine(models.Model):
                            'subaccount_totals_list': subaccount_totals_list_formatted,
                            'all_subaccounts_credit_minus_debit':dollar_format_parentheses(credit_minus_debit_total, True)}
 
-
 #            if expense_budget_line.expense.include_expense(user_preferences):
 #                if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
 #                    tot = tot + expense_budget_line.amount
-    
-
         return subaccount_data
+
+    @classmethod
+    def create_budget_entries_list(cls, user_preferences, month_list):
+        """
+        fetches and formats the data used to create the budget entries page.
+        """
+        fiscal_year = user_preferences.fiscal_year_to_view
+        expense_dict={}
+
+        for month, year, year_name in month_list:
+            for ebl in cls.objects.select_related('expense','subaccount','budget_line').filter(expense__date__month=month,
+                                          expense__date__year=year):
+                date_string = ebl.expense.date.strftime("%m/%d/%y")
+                if ebl.expense.include_expense(user_preferences):
+                    if ebl.expense.id in expense_dict:
+                        expense_dict[ebl.expense.id]['expense_budget_lines'].append({'budget_line_code': ebl.budget_line.code,
+                                                                                     'subaccount': ebl.subaccount,
+                                                                                     'debit_or_credit': ebl.debit_or_credit,
+                                                                                     'formattedprice': ebl.formattedprice,
+                                                                                     'is_budget_adjustment': ebl.is_budget_adjustment
+                                                                                     }
+                                                                                    )
+                    else:
+                        expense_dict[ebl.expense.id]={'date': ebl.expense.date,
+                                                      'extra_note': ebl.expense.extra_note,
+                                                      'description': ebl.expense.description,
+                                                      'abbrev_note': ebl.expense.abbrev_note,
+                                                      'date_numeric': ebl.expense.date.year*10000+ebl.expense.date.month*100+ebl.expense.date.day,
+                                                      'id': ebl.expense.id,
+                                                      'DEBIT': ebl.DEBIT,
+                                                      'total_debit': 0,
+                                                      'total_credit': 0,
+                                                      'total_debit_string': '',
+                                                      'total_credit_string': '',
+                                                      'checked': ebl.expense.checked,
+                                                      'encumbered': ebl.expense.encumbered,
+                                                      'includes_budget_adjustment': False,
+                                                      'future_expense': ebl.expense.future_expense,
+                                                      'expense_budget_lines': [{'budget_line_code': ebl.budget_line.code,
+                                                                                'subaccount': ebl.subaccount,
+                                                                                'debit_or_credit': ebl.debit_or_credit,
+                                                                                'formattedprice': ebl.formattedprice,
+                                                                                'is_budget_adjustment': ebl.is_budget_adjustment
+                                                                                }
+                                                                               ]
+                                                      }
+                    if ebl.is_budget_adjustment:
+                        expense_dict[ebl.expense.id]['includes_budget_adjustment'] = True
+                    if ebl.debit_or_credit == ebl.DEBIT:
+                        expense_dict[ebl.expense.id]['total_debit'] += ebl.amount
+                        expense_dict[ebl.expense.id]['total_debit_string'] = "{0:.2f}".format(expense_dict[ebl.expense.id]['total_debit'])                    
+                    else:
+                        expense_dict[ebl.expense.id]['total_credit'] += ebl.amount
+                        expense_dict[ebl.expense.id]['total_credit_string'] = "{0:.2f}".format(expense_dict[ebl.expense.id]['total_credit'])
+
+# NEXT: fix total_debit, total_debit_string, etc., so that they are not looping backwards along foreign keys!  currently down to 1400 queries
+
+        budget_entry_list = []
+        for key in expense_dict:
+            budget_entry_list.append(expense_dict[key])
+        sorted_budget_entry_list = sorted(budget_entry_list, key=lambda k: k['date_numeric'], reverse=True)
+
+        return sorted_budget_entry_list
+
 
     def formattedprice(self):
         return "%01.2f" % self.amount

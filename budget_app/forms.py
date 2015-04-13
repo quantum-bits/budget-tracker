@@ -36,7 +36,7 @@ class BaseExpenseBudgetLineFormset(forms.models.BaseInlineFormSet):
             try:
                 amount = subform.cleaned_data['amount']
                 if decimal.Decimal(amount) <=0:
-                    raise forms.ValidationError("Amounts must be great than zero.  Use Debit or Credit accordingly.")
+                    raise forms.ValidationError("Amounts must be greater than zero.  Use Debit or Credit accordingly.")
                 budgetline = subform.cleaned_data['budget_line']
 #                if budgetline.id in budget_line_id_list:
 #                   raise forms.ValidationError("Each budget line may only be used once for a given transaction.")
