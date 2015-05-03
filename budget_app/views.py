@@ -108,48 +108,6 @@ def budget_entries(request, id = None):
         }
     return render(request, 'budget_entries.html', context)
 
-login_required
-def budget_entries2(request, id = None):
-    user = request.user
-# assumes that users each have exactly ONE UserPreferences object
-    user_preferences = user.user_preferences.all()[0]
-    fiscal_year = user_preferences.fiscal_year_to_view
-
-    request.session["return_to_page"] = "/budget_app/budgetentries/"
-
-    if request.method == 'POST':
-        process_preferences_and_checked_form(request, user_preferences)
-
-    expense_list = []
-    for expense in Expense.objects.all():
-        if expense.date <= fiscal_year.end_on and expense.date >= fiscal_year.begin_on:
-            if expense.include_expense(user_preferences):
-                expense_list.append(expense)
-#                print expense.abbrev_note()
-
-
-    can_edit = False
-    if user.is_superuser:
-        can_edit = True
-
-    if id == None:
-        unchecked_only = False
-    else:
-        if user_preferences.view_checked_only:
-            unchecked_only = False
-        else:
-            unchecked_only = True
-
-    context = { 
-        'user_preferences': user_preferences,
-        'user': user,
-        'fiscal_year': fiscal_year,
-        'expense_list': expense_list,
-        'unchecked_only': unchecked_only,
-        'can_edit': can_edit
-        }
-    return render(request, 'budget_entries2.html', context)
-
 
 @login_required
 def credit_card_entries(request):
@@ -386,8 +344,9 @@ def subaccount_summary(request):
         }
     return render(request, 'subaccount_summary.html', context)
 
+
 @login_required
-def subaccount_summary2(request):
+def budget_line_summary(request):
     user = request.user
 # assumes that users each have exactly ONE UserPreferences object
     user_preferences = user.user_preferences.all()[0]
@@ -401,66 +360,8 @@ def subaccount_summary2(request):
     for month, year, year_name in month_list:
         month_name_list.append(year_name)
 
-    subaccount_totals_list=[]
-    all_subaccounts_credit_minus_debit = 0
-    for month, year, year_name in month_list:
-        total_for_month = 0
-        for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id).prefetch_related('expense_budget_line__expense'):
-            total_for_month = total_for_month + subaccount.credit_month(user_preferences, month, year)-subaccount.debit_month(user_preferences, month, year)
-        all_subaccounts_credit_minus_debit = all_subaccounts_credit_minus_debit + total_for_month
-        subaccount_totals_list.append(dollar_format_parentheses(total_for_month,True))
 
-    subaccount_list = []
-    all_subaccounts_total = 0
-    all_subaccounts_adjusted_total = 0
-    budget_total = 0
-    credit_minus_debit_total = 0
-
-    for subaccount in SubAccount.objects.filter(fiscal_year__id=fiscal_year.id):
-        owned_by = []
-        for account_owner in subaccount.account_owners.all():
-            owned_by.append(account_owner.department_member.last_name+" ({0:.0f}%)".format(account_owner.fraction*100))
-        data_entries = []
-        all_subaccounts_total = all_subaccounts_total+subaccount.amount_available
-        subaccount_adjusted_budget=subaccount.adjusted_budget(user_preferences)
-        all_subaccounts_adjusted_total = all_subaccounts_adjusted_total+subaccount_adjusted_budget
-        budget_adjustment_note = ''
-        for month, year, year_name in month_list:
-            note = subaccount.retrieve_breakdown(user_preferences,month, year)
-            budget_adjustment_note = budget_adjustment_note+subaccount.retrieve_budget_adjustment_breakdown(user_preferences,month, year)
-            entry = subaccount.credit_month(user_preferences,month, year)-subaccount.debit_month(user_preferences,month, year)
-            data_entries.append({'amount': dollar_format_parentheses(entry,False), 'breakdown':note})
-#            department_total = department_total + entry
-            credit_minus_debit_total = credit_minus_debit_total + entry
-
-        total_subaccount = subaccount.total_credit(user_preferences)-subaccount.total_debit(user_preferences)
-        budget_remaining_subaccount = subaccount.amount_remaining(user_preferences)
-        budget_remaining_is_negative = False
-        if budget_remaining_subaccount < 0:
-            budget_remaining_is_negative = True
-        subaccount_list.append({'subaccount': subaccount,
-                                'owned_by': owned_by,
-                                'data_entries': data_entries,
-                                'budget_adjustment_note': budget_adjustment_note,
-                                'total_debit_minus_credit': dollar_format_parentheses(total_subaccount,True),
-                                'subaccount_available': dollar_format_parentheses(subaccount.amount_available,True),
-                                'adjusted_budget': dollar_format_parentheses(subaccount_adjusted_budget,True),
-                                'subaccount_remaining': dollar_format_parentheses(budget_remaining_subaccount,True),
-                                'remaining_negative': budget_remaining_is_negative})
-
-    budget_remaining = all_subaccounts_adjusted_total+credit_minus_debit_total
-    budget_remaining_is_negative = False
-    if budget_remaining < 0:
-        budget_remaining_is_negative = True
-    subaccount_data = {'subaccount_list': subaccount_list,
-                       'all_subaccounts_total': all_subaccounts_total,
-                       'month_name_list': month_name_list,
-                       'adjusted_budget_total': all_subaccounts_adjusted_total,
-                       'budget_remaining_is_negative': budget_remaining_is_negative,
-                       'budget_remaining': dollar_format_parentheses(budget_remaining, True),
-                       'budget_total': all_subaccounts_total,
-                       'subaccount_totals_list': subaccount_totals_list,
-                       'all_subaccounts_credit_minus_debit':dollar_format_parentheses(all_subaccounts_credit_minus_debit, True)}
+    department_list = ExpenseBudgetLine.create_budget_line_summary(user_preferences, month_list)
 
     can_edit = False
     if user.is_superuser:
@@ -470,15 +371,13 @@ def subaccount_summary2(request):
         'user_preferences': user_preferences,
         'user': user,
         'fiscal_year': fiscal_year,
-        'subaccount_data': subaccount_data,
+        'department_list': department_list,
         'can_edit': can_edit
         }
-    return render(request, 'subaccount_summary.html', context)
-
-
+    return render(request, 'budget_line_summary.html', context)
 
 @login_required
-def budget_line_summary(request):
+def budget_line_summary2(request):
     user = request.user
 # assumes that users each have exactly ONE UserPreferences object
     user_preferences = user.user_preferences.all()[0]
@@ -554,7 +453,7 @@ def budget_line_summary(request):
         'department_list': department_list,
         'can_edit': can_edit
         }
-    return render(request, 'budget_line_summary.html', context)
+    return render(request, 'budget_line_summary2.html', context)
 
 
 

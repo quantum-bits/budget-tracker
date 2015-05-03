@@ -55,42 +55,42 @@ div.f3 { clear: both; }
 	<td style="text-align: center;"> <strong>Orig Budget</strong> </td>
 	<td style="text-align: center;"> <strong>Adj Budget</strong> </td>
 	<td style="text-align: center;"> <strong>Remaining</strong> </td>
-	{% for month in department.budget_line_data.month_name_list %}
+	{% for month in department.month_name_list %}
 	<td style="text-align: center;"> <strong>{{month}}</strong> </td>
 	{% endfor %}
 	<td style="text-align: center;"> <strong> Total</strong> </td>
 	</thead>
       </tr>
       <tbody>
-	{% for row in department.budget_line_data.budget_line_list %}
+	{% for row in department.budget_line_list %}
 	<tr>
 	  <td> {{row.budget_line}} </td>
-	  <td style="text-align: right;">{{row.original_budget}}</td>
+	  <td style="text-align: right;">{{row.budget_line_available}}</td>
 	  <td title="{{row.budget_adjustment_note}}" style="text-align: right;">{{row.adjusted_budget}}</td>
 	    {% if row.remaining_negative %}
-	       <td style="text-align: right; color: red"> {{row.remaining}} </td>
+	       <td style="text-align: right; color: red"> {{row.budget_line_remaining}} </td>
 	    {% else %}
-	       <td style="text-align: right;"> {{row.remaining}} </td>
+	       <td style="text-align: right;"> {{row.budget_line_remaining}} </td>
 	    {% endif %}
 	    {% for entry in row.data_entries %}
 	      <td title="{{entry.breakdown}}" style="text-align: right;">{{entry.amount}}</td>
 	    {% endfor %}
-	    <td style="text-align: right;">{{row.total_credit_minus_debit}}</td>
+	    <td style="text-align: right;">{{row.total_debit_minus_credit}}</td>
 	</tr>
 	{% endfor %}
 	<tr>
 	  <td style="text-align: right;"> <strong>Totals</strong> </td>
-	  <td style="text-align: right;"> {{department.budget_line_data.budget_total}} </td>
-	  <td style="text-align: right;"> {{department.budget_line_data.adjusted_budget_total}} </td>
-	    {% if department.budget_line_data.budget_remaining_is_negative %}
-	       <td style="text-align: right; color: red"> {{department.budget_line_data.budget_remaining}} </td>
+	  <td style="text-align: right;"> {{department.budget_total}} </td>
+	  <td style="text-align: right;"> {{department.adjusted_budget_total}} </td>
+	    {% if department.budget_remaining_is_negative %}
+	       <td style="text-align: right; color: red"> {{department.budget_remaining}} </td>
 	    {% else %}
-	       <td style="text-align: right;"> {{department.budget_line_data.budget_remaining}} </td>
+	       <td style="text-align: right;"> {{department.budget_remaining}} </td>
 	    {% endif %}
-	    {% for total in department.budget_line_data.budget_line_totals_list %}
+	    {% for total in department.department_totals_list %}
 	      <td style="text-align: right;">{{total}}</td>
 	    {% endfor %}
-	    <td style="text-align: right;"> {{department.budget_line_data.all_budget_lines_credit_minus_debit}} </td>
+	    <td style="text-align: right;"> {{department.department_total}} </td>
 	</tr>
 
 	</tbody>
