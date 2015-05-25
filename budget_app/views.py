@@ -24,8 +24,20 @@ def home(request):
     return render(request, 'home.html')
 
 # To Do:
+# 0. New view(!) -- table with subaccounts down the side and years across
+#    the top and budgeted amounts in the table itself.  The last column
+#    can have a copy forward feature; there can also be a drop-down with
+#    the different possibilities for the amounts (if there were different
+#    options in different years)
+# 0a. Same idea, but for budget lines.
+# 0b. Make a (printable) "reports" view that shows each person's account
+#     totals, along with the breakdown.  Need to talk to Bill a bit more
+#     to see what he has in mind for this.  Dump to pdf?  Or generate a new
+#     view and then attempt to print this out?  Not sure how well that will go.
+# 0c. Do a summary of budget lines that lines up better with BANNER.  I think
+#     the main thing will be to not include unchecked items in totals(?)  Need
+#     to ask Bill for clarification.
 # 1. Do a "freeze panes" thing like was done on iChair.  Do it for the budget entries page, and maybe other ones.
-# 2. Possible to speed this app up?!?  Check it out with the debug toolbar, etc.
 # 3. hint at the top of the budget lines page saying adj budget +/- expense = remaining
 # Comments from Bill:
 #   ==> Subacct page: summary line should show adj bud - spent + credits; otherwise you think haven't spent a lot
@@ -107,6 +119,10 @@ def budget_entries(request, id = None):
         'can_edit': can_edit
         }
     return render(request, 'budget_entries.html', context)
+
+
+
+
 
 
 @login_required
@@ -233,6 +249,242 @@ def budget_line_entries(request, id = None):
 
     return render(request, 'budget_line_entries.html', context)
 
+
+@login_required
+def copy_budget_lines(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    current_fiscal_year = user_preferences.fiscal_year_to_view
+
+#    if request.method == 'POST':
+#        process_preferences_and_checked_form(request, user_preferences)
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
+    if request.method == 'POST':
+        budget_line_list = request.POST.getlist('budget_lines_to_copy')
+# for each element in the list of budget lines, fetch the requested budget (which is in the drop-down list)
+        for budget_line_id in budget_line_list:
+            amount = request.POST.get('amount'+budget_line_id)
+# now create a new budget line, with the requested parameters, etc.
+# first, get one of the original budget line objects, so various properties can be copied....
+            budget_line_object = BudgetLine.objects.get(pk=int(budget_line_id))
+            new_budget_line = BudgetLine.objects.create(code = budget_line_object.code,
+                                                        name = budget_line_object.name,
+                                                        has_subaccounts = budget_line_object.has_subaccounts,
+                                                        department = budget_line_object.department,
+                                                        fiscal_year = current_fiscal_year,
+                                                        amount_available = Decimal(amount)
+                                                        )
+            new_budget_line.save()
+
+
+#        next = request.GET.get('next', 'profile')
+#        return redirect(next)
+
+
+    fiscal_year_reverse_dict = {}
+    index = 0
+    number_previous_years = 0
+    previous_fy_list = []
+    for fiscal_year in FiscalYear.objects.all():
+        if fiscal_year.begin_on.year < current_fiscal_year.begin_on.year:
+            fiscal_year_reverse_dict[fiscal_year.id] = index
+            number_previous_years+=1
+            index+=1
+            previous_fy_list.append(fiscal_year)
+
+    budget_lines_current_fy = []
+    budget_lines_current_fy_amounts = {}
+    for budget_line in BudgetLine.objects.filter(fiscal_year = current_fiscal_year):
+        budget_lines_current_fy.append(budget_line.code)
+        budget_lines_current_fy_amounts[budget_line.code]=budget_line.amount_available
+
+# now construct an array that holds the previous years' budget amounts
+        
+    budget_line_dict = {}
+    for budget_line in BudgetLine.objects.all():
+        if budget_line.fiscal_year.begin_on.year < current_fiscal_year.begin_on.year:
+            if budget_line.code not in budget_lines_current_fy:
+                can_copy_forward = True
+                amount_current_fy = '-'
+            else:
+                can_copy_forward = False
+                amount_current_fy = budget_lines_current_fy_amounts[budget_line.code]
+#            index = fiscal_year_reverse_dict[budget_line.fiscal_year.id]
+            if budget_line.code not in budget_line_dict:
+                budget_line_dict[budget_line.code] = {'name': budget_line.name,
+                                                      'code': budget_line.code,
+                                                      'amounts': {budget_line.fiscal_year.id: budget_line.amount_available},
+                                                      'can_copy_forward': can_copy_forward,
+                                                      'department': budget_line.department,
+                                                      'id': budget_line.id,
+                                                      'current_fy_amount': amount_current_fy}
+            else:
+                budget_line_dict[budget_line.code]['amounts'][budget_line.fiscal_year.id] = budget_line.amount_available
+
+    # turn the dict into a sorted list
+    budget_line_list = []
+    for key in budget_line_dict:
+        amount_array = []
+        drop_down_list_array = [Decimal('0')]
+        for year in range(number_previous_years):
+            amount_array.append('-')
+        for year_id in budget_line_dict[key]['amounts']:
+            amount_array[fiscal_year_reverse_dict[year_id]]=budget_line_dict[key]['amounts'][year_id]
+            if budget_line_dict[key]['amounts'][year_id] not in drop_down_list_array:
+                drop_down_list_array.insert(0, budget_line_dict[key]['amounts'][year_id])
+        # add a new element to the dict....
+        budget_line_dict[key]['amount_array']=amount_array
+        budget_line_dict[key]['drop_down_list']=drop_down_list_array
+        budget_line_list.append(budget_line_dict[key])
+    sorted_budget_line_list = sorted(budget_line_list, key=lambda k: k['code'])
+
+    context = { 
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': current_fiscal_year,
+        'can_edit': can_edit,
+        'budget_line_list': sorted_budget_line_list,
+        'previous_fy_list': previous_fy_list
+        }
+    return render(request, 'copy_budget_lines.html', context)
+
+@login_required
+def copy_subaccounts(request):
+    user = request.user
+# assumes that users each have exactly ONE UserPreferences object
+    user_preferences = user.user_preferences.all()[0]
+    current_fiscal_year = user_preferences.fiscal_year_to_view
+
+#    if request.method == 'POST':
+#        process_preferences_and_checked_form(request, user_preferences)
+
+    can_edit = False
+    if user.is_superuser:
+        can_edit = True
+
+    if request.method == 'POST':
+        subaccounts_list = request.POST.getlist('subaccounts_to_copy')
+# for each element in the list of subaccounts, fetch the requested budget (which is in the drop-down list)
+        for subaccount_id in subaccounts_list:
+            subaccount_object_id = request.POST.get('amount'+subaccount_id)
+
+# now create a new subaccount, with the requested parameters, etc.
+# first, get the particular subaccount object whose parameters will be copied
+            subaccount_object = SubAccount.objects.get(pk=int(subaccount_object_id))
+
+            new_subaccount = SubAccount.objects.create(name = subaccount_object.name,
+                                                       abbrev = subaccount_object.abbrev,
+                                                       fiscal_year = current_fiscal_year,
+                                                       amount_available = subaccount_object.amount_available
+                                                       )
+            # now create the "through" object(s)
+            for account_owner in AccountOwner.objects.filter(subaccount=subaccount_object):
+                owner = AccountOwner(subaccount=new_subaccount,
+                                     department_member = account_owner.department_member,
+                                     fraction = account_owner.fraction
+                                     )
+                owner.save()
+
+            new_subaccount.save()
+
+    fiscal_year_reverse_dict = {}
+    index = 0
+    number_previous_years = 0
+    previous_fy_list = []
+    for fiscal_year in FiscalYear.objects.all():
+        if fiscal_year.begin_on.year < current_fiscal_year.begin_on.year:
+            fiscal_year_reverse_dict[fiscal_year.id] = index
+            number_previous_years+=1
+            index+=1
+            previous_fy_list.append(fiscal_year)
+
+    subaccounts_current_fy = []
+    subaccounts_current_fy_amounts = {}
+    for subaccount in SubAccount.objects.filter(fiscal_year = current_fiscal_year):
+        subaccounts_current_fy.append(subaccount.name)
+        subaccount_breakdown_string = str(subaccount.amount_available)+' '
+        zero_owners = True
+        for account_owner in AccountOwner.objects.filter(subaccount=subaccount):
+            fraction_string="{0:.0f}%".format(100*account_owner.fraction)
+            if zero_owners:
+                subaccount_breakdown_string+= '['
+                zero_owners = False
+            else:
+                subaccount_breakdown_string+= '; '
+            subaccount_breakdown_string+= account_owner.department_member.last_name +'('+fraction_string+')'
+        if not zero_owners:
+            subaccount_breakdown_string+= ']'
+        subaccounts_current_fy_amounts[subaccount.name]=subaccount_breakdown_string
+
+# now construct an array that holds the previous years' budget amounts
+        
+    subaccount_dict = {}
+    for subaccount in SubAccount.objects.all():
+        if subaccount.fiscal_year.begin_on.year < current_fiscal_year.begin_on.year:
+            if subaccount.name not in subaccounts_current_fy:
+                can_copy_forward = True
+                amount_current_fy = '-'
+            else:
+                can_copy_forward = False
+                amount_current_fy = subaccounts_current_fy_amounts[subaccount.name]
+#            index = fiscal_year_reverse_dict[subaccount.fiscal_year.id]
+
+            subaccount_breakdown_string = str(subaccount.amount_available)+' '
+            zero_owners = True
+            for account_owner in AccountOwner.objects.filter(subaccount=subaccount):
+                fraction_string="{0:.0f}%".format(100*account_owner.fraction)
+                if zero_owners:
+                    subaccount_breakdown_string+= '['
+                    zero_owners = False
+                else:
+                    subaccount_breakdown_string+= '; '
+                subaccount_breakdown_string+= account_owner.department_member.last_name +'('+fraction_string+')'
+            if not zero_owners:
+                subaccount_breakdown_string+= ']'
+
+            if subaccount.name not in subaccount_dict:
+                subaccount_dict[subaccount.name] = {'name': subaccount.name,
+                                                    'abbrev': subaccount.abbrev,
+                                                    'amounts': {subaccount.fiscal_year.id: {'id': subaccount.id, 
+                                                                                            'description': subaccount_breakdown_string}},
+                                                    'can_copy_forward': can_copy_forward,
+                                                    'id': subaccount.id,
+                                                    'current_fy_amount': amount_current_fy}
+            else:
+                subaccount_dict[subaccount.name]['amounts'][subaccount.fiscal_year.id] = {'id': subaccount.id,
+                                                                                          'description': subaccount_breakdown_string}
+
+    # turn the dict into a sorted list
+    subaccount_list = []
+    for key in subaccount_dict:
+        amount_array = []
+        drop_down_dict = {}
+        for year in range(number_previous_years):
+            amount_array.append({'id':0,'description':'-'})
+        for year_id in subaccount_dict[key]['amounts']:
+            amount_array[fiscal_year_reverse_dict[year_id]]=subaccount_dict[key]['amounts'][year_id]
+            if subaccount_dict[key]['amounts'][year_id]['description'] not in drop_down_dict.values():
+                drop_down_dict[subaccount_dict[key]['amounts'][year_id]['id']] = subaccount_dict[key]['amounts'][year_id]['description']
+        # add a new element to the dict....
+        subaccount_dict[key]['amount_array']=amount_array
+        subaccount_dict[key]['drop_down_dict']=drop_down_dict
+        subaccount_list.append(subaccount_dict[key])
+    sorted_subaccount_list = sorted(subaccount_list, key=lambda k: k['name'])
+
+    context = { 
+        'user_preferences': user_preferences,
+        'user': user,
+        'fiscal_year': current_fiscal_year,
+        'can_edit': can_edit,
+        'subaccount_list': sorted_subaccount_list,
+        'previous_fy_list': previous_fy_list
+        }
+    return render(request, 'copy_subaccounts.html', context)
 
 def dollar_format(amount):
     return "{0:.2f}".format(amount)
@@ -428,7 +680,7 @@ def budget_line_summary2(request):
                                      'budget_line_remaining': dollar_format_parentheses(budget_remaining_in_line,True),
                                      'remaining_negative': budget_remaining_is_negative})
         budget_remaining = adjusted_budget_total+department_total
-        print budget_remaining, adjusted_budget_total, department_total
+#        print budget_remaining, adjusted_budget_total, department_total
         budget_remaining_is_negative = False
         if budget_remaining < 0:
             budget_remaining_is_negative = True

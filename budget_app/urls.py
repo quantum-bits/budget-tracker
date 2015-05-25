@@ -20,7 +20,8 @@ urlpatterns = patterns(
     url(r'^newbudgetentry/(\d+)/$', 'new_budget_entry', name='new_budget_entry'),
     url(r'^deleteexpense/(\d+)/$', 'delete_expense', name='delete_expense'),
     url(r'^deleteexpenseconfirmation/(\d+)/$', 'delete_expense_confirmation', name='delete_expense_confirmation'),
-
+    url(r'^copysubaccounts/$', 'copy_subaccounts', name='copy_subaccounts'),
+    url(r'^copybudgetlines/$', 'copy_budget_lines', name='copy_budget_lines'),
     url(r'^updateyeartoview/(\d+)/$', 'update_year_to_view', name='update_year_to_view'),
 
     url(r'^notes/', 'display_notes', name='display_notes'),

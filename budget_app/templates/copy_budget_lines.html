@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action=""  method="post">
+  {% csrf_token %}
+
+
+<div class="content-center">
+
+{% if can_edit %}
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+
+<p></p>
+{% endif %}
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
+	<tr>
+	  <th colspan="5"> Budget Lines </th>
+	</tr>
+	<tr>
+	<td> Code </td>
+	<td> Name </td>
+	<td style="text-align: center;"> Department </td>
+	{% for year in previous_fy_list %}
+	         <td style="text-align: center;"> {{year}} </td>
+        {% endfor %}
+	<td style="text-align: center;"> {{fiscal_year}} </td> 
+	{% if can_edit %}
+	<td style="text-align: center;"> Copy Budget Line to {{fiscal_year}} </td>
+	{% endif %}
+	</thead>
+
+      <tbody>
+	{% for budget_line in budget_line_list %}
+	    <tr>
+	      {% if budget_line.can_copy_forward %}
+	         <td> {{budget_line.code}} </td>
+	         <td> {{budget_line.name}} </td>
+	         <td> {{budget_line.department}} </td>
+	        {% for amount in budget_line.amount_array %}
+	           <td  style="text-align: center;"> {{amount}} </td>
+                {% endfor %}
+		 <td  style="text-align: center;">
+		{% if can_edit %}
+		   <select name="amount{{budget_line.id}}">
+		{% for amount in budget_line.drop_down_list %}
+	           <option value="{{amount}}"> {{amount}} </option>
+                {% endfor %}
+		   </select>
+		{% else %}
+		   {{budget_line.current_fy_amount}}
+		{% endif %}
+		 </td>
+		 {% if can_edit %}
+		 <td  style="text-align: center;"> <input type="checkbox" name="budget_lines_to_copy" id="option{{budget_line.id}}" value={{budget_line.id}} /></td>
+		 {% endif %}
+	      {% else %}
+		 <td style="color: grey"> {{budget_line.code}} </td>
+	         <td style="color: grey"> {{budget_line.name}} </td>
+	         <td style="color: grey"> {{budget_line.department}} </td>
+	        {% for amount in budget_line.amount_array %}
+	           <td style="text-align: center; color: grey"> {{amount}} </td>
+                {% endfor %}
+		 <td style="text-align: center; color: grey">
+		   {{budget_line.current_fy_amount}}
+	         </td>
+		 {% if can_edit %}
+	         <td style="text-align: center; color: grey">
+	         </td>
+		 {% endif %}
+	      {% endif %}
+	{% endfor %}
+      </tbody>
+    </table>
+ </div>
+
+<div class="content-center">
+
+{% if can_edit %}
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+<p></p>
+{% endif %}
+
+</div>
+
+
+</form>
+
+<!--
+<script>
+  $(function() {
+
+  $('#btn1').on('mouseover', function(){
+    $('#panel1').fadeToggle(1000);
+  });
+
+  });
+
+</script>
+-->
+
+  <script>
+    $(window).load(function(){
+    $("#nav-summary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Budget Lines by FY (Current FY: {{fiscal_year}})</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+{% endblock %}

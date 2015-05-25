@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action=""  method="post">
+  {% csrf_token %}
+
+
+<div class="content-center">
+
+{% if can_edit %}
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+
+<p></p>
+{% endif %}
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
+	<tr>
+	  <th colspan="5"> Subaccounts </th>
+	</tr>
+	<tr>
+	<td> Name </td>
+	<td> Abbreviation </td>
+	{% for year in previous_fy_list %}
+	         <td style="text-align: center;"> {{year}} </td>
+        {% endfor %}
+	<td style="text-align: center;"> {{fiscal_year}} </td> 
+	{% if can_edit %}
+	<td style="text-align: center;"> Copy Subaccount to {{fiscal_year}} </td>
+	{% endif %}
+	</thead>
+
+      <tbody>
+	{% for subaccount in subaccount_list %}
+	    <tr>
+	      {% if subaccount.can_copy_forward %}
+	         <td> {{subaccount.name}} </td>
+	         <td> {{subaccount.abbrev}} </td>
+	        {% for amount in subaccount.amount_array %}
+	           <td  style="text-align: left;"> {{amount.description}} </td>
+                {% endfor %}
+		 <td  style="text-align: center;">
+		{% if can_edit %}
+		   <select name="amount{{subaccount.id}}">
+		{% for key_id, value in subaccount.drop_down_dict.items %}
+	           <option value="{{key_id}}"> {{value}} </option>
+                {% endfor %}
+		   </select>
+		{% else %}
+		   {{subaccount.current_fy_amount}}
+		{% endif %}
+		 </td>
+		 {% if can_edit %}
+		 <td  style="text-align: center;"> <input type="checkbox" name="subaccounts_to_copy" id="option{{subaccount.id}}" value={{subaccount.id}} /></td>
+		 {% endif %}
+	      {% else %}
+		 <td style="color: grey"> {{subaccount.name}} </td>
+	         <td style="color: grey"> {{subaccount.abbrev}} </td>
+	        {% for amount in subaccount.amount_array %}
+	           <td style="text-align: left; color: grey"> {{amount.description}} </td>
+                {% endfor %}
+		 <td style="text-align: left; color: grey">
+		   {{subaccount.current_fy_amount}}
+	         </td>
+		 {% if can_edit %}
+	         <td style="text-align: center; color: grey">
+	         </td>
+		 {% endif %}
+	      {% endif %}
+	{% endfor %}
+      </tbody>
+    </table>
+ </div>
+
+<div class="content-center">
+
+{% if can_edit %}
+<div>
+<p><input type="submit" alt="register" /></p>
+</div>
+<p></p>
+{% endif %}
+
+</div>
+
+
+</form>
+
+<!--
+<script>
+  $(function() {
+
+  $('#btn1').on('mouseover', function(){
+    $('#panel1').fadeToggle(1000);
+  });
+
+  });
+
+</script>
+-->
+
+  <script>
+    $(window).load(function(){
+    $("#nav-summary").addClass("current");
+    $('.page-name').find('h1').replaceWith('<h1>Subaccounts by FY (Current FY: {{fiscal_year}})</h1>');
+    $(".page-name").stop().animate({opacity: 1,'margin-left': '5%'}, 700);});
+  </script>
+
+{% endblock %}
