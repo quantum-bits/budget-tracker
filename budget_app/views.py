@@ -24,12 +24,6 @@ def home(request):
     return render(request, 'home.html')
 
 # To Do:
-# 0. New view(!) -- table with subaccounts down the side and years across
-#    the top and budgeted amounts in the table itself.  The last column
-#    can have a copy forward feature; there can also be a drop-down with
-#    the different possibilities for the amounts (if there were different
-#    options in different years)
-# 0a. Same idea, but for budget lines.
 # 0b. Make a (printable) "reports" view that shows each person's account
 #     totals, along with the breakdown.  Need to talk to Bill a bit more
 #     to see what he has in mind for this.  Dump to pdf?  Or generate a new
@@ -182,6 +176,19 @@ def budget_line_entries(request, id = None):
     if request.method == 'POST':
         process_preferences_and_checked_form(request, user_preferences)
 
+# to change things for the "unchecked only" case, I did the following:
+# 1. moved the "if id == None" block of code to here (instead of having it below)
+# 2. added in keep_it = True, and then the if statement that can set keep_it to False
+# 3. new if statement: if keep_it:....  and indented that block of code
+
+    if id == None:
+        unchecked_only = False
+    else:
+        if user_preferences.view_checked_only:
+            unchecked_only = False
+        else:
+            unchecked_only = True
+
     department_list = []
     for department in Department.objects.all():
         budget_line_list = []
@@ -191,18 +198,22 @@ def budget_line_entries(request, id = None):
             bl_total_credit = 0
             bl_budget_adjustment = 0
             for expense_budget_line in budget_line.expense_budget_line.select_related('expense','subaccount').all():
+                keep_it = True
                 if expense_budget_line.expense.include_expense(user_preferences):
-                    ebl_list.append(expense_budget_line)
-                    if expense_budget_line.is_budget_adjustment == False:
-                        if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
-                            bl_total_debit+=expense_budget_line.amount
+                    if expense_budget_line.expense.checked and unchecked_only:
+                        keep_it = False
+                    if keep_it:
+                        ebl_list.append(expense_budget_line)
+                        if expense_budget_line.is_budget_adjustment == False:
+                            if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                                bl_total_debit+=expense_budget_line.amount
+                            else:
+                                bl_total_credit+=expense_budget_line.amount
                         else:
-                            bl_total_credit+=expense_budget_line.amount
-                    else:
-                        if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
-                            bl_budget_adjustment-=expense_budget_line.amount
-                        else:
-                            bl_budget_adjustment+=expense_budget_line.amount                        
+                            if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                                bl_budget_adjustment-=expense_budget_line.amount
+                            else:
+                                bl_budget_adjustment+=expense_budget_line.amount                        
             total_debit_minus_credit = bl_total_debit-bl_total_credit
             bl_adjusted_budget = budget_line.amount_available + bl_budget_adjustment
             bl_amount_remaining = bl_adjusted_budget - total_debit_minus_credit
@@ -222,14 +233,6 @@ def budget_line_entries(request, id = None):
                                      'budget_line_remaining': dollar_format_parentheses(bl_amount_remaining, True)})
         department_list.append({'department': department,
                                 'budget_line_list': budget_line_list})
-
-    if id == None:
-        unchecked_only = False
-    else:
-        if user_preferences.view_checked_only:
-            unchecked_only = False
-        else:
-            unchecked_only = True
 
     can_edit = False
     if user.is_superuser:
