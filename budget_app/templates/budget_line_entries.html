@@ -4,8 +4,20 @@
 
 <style type="text/css">
 div.f1 { float: left; width: 250px; }
-div.f2 { float: left; text-align: right; width: 250px; }
-div.f3 { clear: both; }
+div.f2 { float: left; text-align: center; width: 150px; }
+div.f3 { float: left; text-align: center; width: 150px; }
+div.f4 { float: left; text-align: center; width: 150px; }
+div.f5 { float: left; text-align: center; width: 150px; }
+div.f6 { clear: both; }
+
+div.t1 { float: left; font-size: 140%; text-align: center; width: 270px; }
+div.t2 { float: left; font-size: 140%; text-align: center; width: 150px; }
+div.t3 { float: left; font-size: 140%; text-align: center; width: 150px; }
+div.t4 { float: left; font-size: 140%; text-align: center; width: 150px; }
+div.t5 { float: left; font-size: 140%; text-align: center; width: 150px; }
+div.t6 { clear: both; }
+
+div.t1 
 </style>
 
 <form action=""  method="post">
@@ -43,6 +55,21 @@ div.f3 { clear: both; }
 
 {% for department in department_list %}
 <h2> {{ department.department }}</h2>
+<div class="t1">Budget Line </div>
+<div class="t2">
+  Adjusted Budget
+</div>
+<div class="t3">
+  Credits/Debits
+</div>
+<div class="t4">
+  Credits/Debits (Checked Only)
+</div>
+<div class="t5">	   
+  Remaining</div><div class="t6"></div>
+
+<p></p>
+
  <div id="year-accordion-{{department.department.id}}" class="accordion">
 {% for row in department.budget_line_list %}
    <div class="accordion-group">
@@ -54,8 +81,17 @@ div.f3 { clear: both; }
 	  onclick="divRegister({{row.budget_line.id}})">
 	 <div class="f1">{{row.budget_line}}</div>
 	 <div class="f2">
-	 {{row.adjusted_budget}}{{row.total_debit_minus_credit}} = {{row.budget_line_remaining}}</div><div class="f3"></div>
-	 </a>
+	   {{row.adjusted_budget}}
+	 </div>
+	 <div class="f3">
+	   {{row.total_debit_minus_credit}}
+	 </div>
+	 <div class="f4">
+	   {{row.total_checked_debit_minus_credit}}
+	 </div>
+	 <div class="f5">	   
+	   {{row.budget_line_remaining}}</div><div class="f6"></div>
+       </a>
        </div>{# accordion-heading #}
 
       <div id="{{row.budget_line.id}}" class="accordion-body collapse">

@@ -197,9 +197,16 @@ def budget_line_entries(request, id = None):
             bl_total_debit = 0
             bl_total_credit = 0
             bl_budget_adjustment = 0
+            bl_total_checked_debit = 0
+            bl_total_checked_credit = 0
             for expense_budget_line in budget_line.expense_budget_line.select_related('expense','subaccount').all():
                 keep_it = True
                 if expense_budget_line.expense.include_expense(user_preferences):
+                    if expense_budget_line.expense.checked and expense_budget_line.is_budget_adjustment == False:
+                        if expense_budget_line.debit_or_credit == expense_budget_line.DEBIT:
+                            bl_total_checked_debit+=expense_budget_line.amount
+                        else:
+                            bl_total_checked_credit+=expense_budget_line.amount
                     if expense_budget_line.expense.checked and unchecked_only:
                         keep_it = False
                     if keep_it:
@@ -215,6 +222,7 @@ def budget_line_entries(request, id = None):
                             else:
                                 bl_budget_adjustment+=expense_budget_line.amount                        
             total_debit_minus_credit = bl_total_debit-bl_total_credit
+            total_checked_debit_minus_credit = bl_total_checked_debit-bl_total_checked_credit
             bl_adjusted_budget = budget_line.amount_available + bl_budget_adjustment
             bl_amount_remaining = bl_adjusted_budget - total_debit_minus_credit
             if total_debit_minus_credit < 0:
@@ -222,12 +230,19 @@ def budget_line_entries(request, id = None):
             else:
                 d_m_c_string = " - "+dollar_format(total_debit_minus_credit)
 
+            if total_checked_debit_minus_credit < 0:
+                checked_d_m_c_string = " + "+dollar_format(-total_checked_debit_minus_credit)
+            else:
+                checked_d_m_c_string = " - "+dollar_format(total_checked_debit_minus_credit)
+
+            
             budget_line_list.append({'budget_line': budget_line, 
                                      'expense_budget_line_list': ebl_list,
                                      'total_debit': dollar_format(bl_total_debit),
                                      'total_credit': dollar_format(bl_total_credit),
                                      'budget_adjustment': dollar_format_parentheses(bl_budget_adjustment, True),
-                                     'total_debit_minus_credit': d_m_c_string,
+                                     'total_debit_minus_credit': dollar_format_parentheses(-total_debit_minus_credit, True),
+                                     'total_checked_debit_minus_credit': dollar_format_parentheses(-total_checked_debit_minus_credit, True),
                                      'budget_line_available': dollar_format_parentheses(budget_line.amount_available, True),
                                      'adjusted_budget': dollar_format_parentheses(bl_adjusted_budget, True),
                                      'budget_line_remaining': dollar_format_parentheses(bl_amount_remaining, True)})
